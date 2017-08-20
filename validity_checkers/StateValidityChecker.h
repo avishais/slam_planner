@@ -45,6 +45,7 @@ public:
 
 	// Check feasibility of a state
 	bool isValid(const ob::State *state);
+	bool isValid(Vector q);
 
 	// OMPL check local connection
 	bool checkMotion(const ob::State *s1, const ob::State *s2);
@@ -54,13 +55,13 @@ public:
 
 	// Two-wheels shortest path from two states
 	bool GetShortestPath(Vector, Vector);
-	bool twb_shortpath(Vector, short, Vector, short, short);
-	void twb_gettangent(Vector q1,short s1, Vector q2, short s2);
+	bool twb_shortpath(Vector, int, Vector, int, int);
+	void twb_gettangent(Vector q1,int s1, Vector q2, int s2);
 	Vector myprop(Vector q, double vi, double wi, double ti);
 	double twb_getangle(Vector, Vector);
 
-
-	bool reconstructMotion(const ob::State *s1, const ob::State *s2, Matrix &M);
+	bool reconstructMotion(const ob::State *, const ob::State *, Matrix &);
+	bool reconstructMotionTW(const ob::State *, const ob::State *, Matrix &);
 
 	void defaultSettings();
 
@@ -82,7 +83,7 @@ private:
 	/** Robot properties */
 	double robot_r = 0.4; // Robot radius
 	double turn_radius = 0.25;
-	double dt = 0.1; // Interval in which to interpolate the motion
+	double dt = 0.2; // Interval in which to interpolate the motion
 
 	/** Shortest path parameters */
 	VectorInt v;

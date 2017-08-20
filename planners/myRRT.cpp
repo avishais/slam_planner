@@ -102,8 +102,8 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
 	Vector q(n);
 
 	//=====
-	Vector q1 = {0.2,-0.1,0.5};
-	Vector q2 = {0.961094811725775,-0.276218686684658,-1.880581031756361};
+	/*Vector q1 = {0.2,-0.1,0.5};
+	Vector q2 = {0.961094811725775,-0.4,1.880581031756361};
 	ob::State *s1 = si_->allocState();
 	ob::State *s2 = si_->allocState();
 
@@ -112,7 +112,7 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
 
 	checkMotionTW(s1, s2);
 
-	exit(1);
+	exit(1);*/
 
 
 	//=====
@@ -171,7 +171,7 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
             dstate = xstate;
         }
 
-        if (checkMotion(nmotion->state, dstate))
+        if (checkMotionTW(nmotion->state, dstate))
         {
             /* create a motion */
             Motion *motion = new Motion(si_);
@@ -297,10 +297,12 @@ void ompl::geometric::RRT::save2file(vector<Motion*> mpath) {
 		for (int i = 1; i < path.size(); i++) {
 
 			Matrix M;
-			bool valid = false;
-			valid =  reconstructMotion(path[i-1]->state, path[i]->state, M);
+			bool valid = reconstructMotionTW(path[i-1]->state, path[i]->state, M);
+			bool validC = checkMotionTW(path[i-1]->state, path[i]->state);
+
 
 			if (!valid) {
+				cout << validC << endl;
 				cout << "Error in reconstructing...\n";
 				return;
 			}

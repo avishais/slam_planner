@@ -10,8 +10,6 @@
 
 void StateValidityChecker::defaultSettings()
 {
-	cout << "here?\n";
-
 	stateSpace_ = mysi_->getStateSpace().get();
 	if (!stateSpace_)
 		OMPL_ERROR("No state space for motion validator");
@@ -23,10 +21,10 @@ void StateValidityChecker::retrieveStateVector(const ob::State *state, Vector &q
 	// cast the abstract state type to the type we expect
 	const ob::RealVectorStateSpace::StateType *Q = state->as<ob::RealVectorStateSpace::StateType>();
 
-		// Set state of rod
-		for (unsigned i = 0; i < n; i++) {
-			q[i] = Q->values[i];
-		}
+	// Set state of rod
+	for (unsigned i = 0; i < n; i++) {
+		q[i] = Q->values[i];
+	}
 }
 
 void StateValidityChecker::updateStateVector(const ob::State *state, Vector q) {
@@ -55,6 +53,13 @@ void StateValidityChecker::printStateVector(const ob::State *state) {
 bool StateValidityChecker::isValid(const ob::State *state) {
 	Vector q(n);
 	retrieveStateVector(state, q);
+
+	return isValid(q);
+}
+
+bool StateValidityChecker::isValid(Vector q) {
+
+	// More constraints to be added here
 
 	return check_collisions(q, robot_r);
 }
@@ -156,24 +161,42 @@ double StateValidityChecker::normDistance(Vector a1, Vector a2, int d) {
 // ========================== Two-wheels motion ===========================================================
 
 bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s2) {
+	// We assume that s1 is in the tree and therefore valid
+
+	Vector q1(n), q2(n), q(n), q_temp(n);
+	retrieveStateVector(s1, q1);
+	retrieveStateVector(s2, q2);
+
+	if (!GetShortestPath(q1, q2)) // Add move straight to goal if the goal is sampled?
+		return false;
+
+	Matrix Q;
+	Q.push_back(q1);
+
+	for (int i = 0; i < v.size(); i++) {
+		int m = 1+ceil(t[i]/dt); // dt + j*dt ?
+		double dd = t[i] / (m-1);
+		q = Q.back();
+		for (int j = 1; j < m; j++) { // starts from 1 because the first point was already inserted to Q
+			q_temp = myprop(q, v[i], w[i], j*dd);
+			if (!isValid(q_temp))
+				return false;
+			Q.push_back(q_temp);
+		}
+	}
+
+	return true;
+}
+
+bool StateValidityChecker::reconstructMotionTW(const ob::State *s1, const ob::State *s2, Matrix &Q) {
 
 	Vector q1(n), q2(n), q(n);
 	retrieveStateVector(s1, q1);
 	retrieveStateVector(s2, q2);
 
-	//if (is_Goal_node) { // Add move straight to goal if the goal is sampled
-	//}
-	//else
 	if (!GetShortestPath(q1, q2))
 		return false;
 
-	cout << "v: "; printVector(v);
-	cout << "w: "; printVector(w);
-	cout << "t: "; printVector(t);
-
-	return false;
-
-	Matrix Q;
 	Q.push_back(q1);
 
 	for (int i = 0; i < v.size(); i++) {
@@ -184,30 +207,29 @@ bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s
 			Q.push_back(myprop(q, v[i], w[i], j*dd));
 	}
 
-	cout << "------\n";
-	printMatrix(Q);
+	return true;
 }
 
 Vector StateValidityChecker::myprop(Vector q, double vi, double wi, double ti) {
-double h = q[2] + wi * ti;
-double x, y;
+	double h = q[2] + wi * ti;
+	double x, y;
 
-if (wi) {
-    x = q[0] + ((vi/wi)*(sin(h)-sin(q[2])));
-    y = q[1] - ((vi/wi)*(cos(h)-cos(q[2])));
-}
-else {
-    x = q[0] + ti * vi * cos(h);
-    y = q[1] + ti * vi * sin(h);
-}
+	if (wi) {
+		x = q[0] + ((vi/wi)*(sin(h)-sin(q[2])));
+		y = q[1] - ((vi/wi)*(cos(h)-cos(q[2])));
+	}
+	else {
+		x = q[0] + ti * vi * cos(h);
+		y = q[1] + ti * vi * sin(h);
+	}
 
-return {x, y, h};
+	return {x, y, h};
 
 }
 
 bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 
-    //   start and goal configurations:
+	//   start and goal configurations:
 	//       q1 = [x;y;theta]
 	//       q2 = [x;y;theta]
 	//
@@ -230,21 +252,17 @@ bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 	for (int s1cur = -1; s1cur < 2; s1cur+=2)
 		for (int s2cur = -1; s2cur < 2; s2cur+=2) {
 			for (int dircur = -1; dircur < 2; dircur+=2) {
-				bool kt = twb_shortpath(q1, s1cur, q2, s2cur, dircur);
-				cout << s1cur << " " << s2cur << " " << dircur << endl;
-				cout << kt << endl;
-				if (kt) {
-					printVector(d1mid2);
+				if (twb_shortpath(q1, s1cur, q2, s2cur, dircur)) {
 					if (d1mid2[0]+d1mid2[1]+d1mid2[2] < d1+dmid+d2) {
 						sol = true;
 
 						t = d1mid2;
+						d1 = t[0]; dmid = t[1]; d2 = t[2];
 						s1 = s1cur;
 						s2 = s2cur;
 						dir = dircur;
 					}
 				}
-
 			}
 		}
 
@@ -257,7 +275,7 @@ bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 	return true;
 }
 
-bool StateValidityChecker::twb_shortpath(Vector q1, short s1, Vector q2, short s2, short dir) {
+bool StateValidityChecker::twb_shortpath(Vector q1, int s1, Vector q2, int s2, int dir) {
 
 	//   q1,q2 are initial and final points
 	//   s1,s2 are -1 for wheels to left, +1 for wheels to right
@@ -284,9 +302,9 @@ bool StateValidityChecker::twb_shortpath(Vector q1, short s1, Vector q2, short s
 
 	double delta1 = twb_getangle(qc1,qt1) - twb_getangle(qc1,q1);
 	if ( dir*s1 > 0 && delta1 < 0 )
-	    delta1 += 2*PI;
+		delta1 += 2*PI;
 	else if ( dir*s1 < 0 && delta1 > 0 )
-	    delta1 -= 2*PI;
+		delta1 -= 2*PI;
 
 	double delta2 = twb_getangle(qc2,q2)-twb_getangle(qc2,qt2);
 	if ( dir*s2 > 0 && delta2 < 0 )
@@ -296,12 +314,12 @@ bool StateValidityChecker::twb_shortpath(Vector q1, short s1, Vector q2, short s
 
 	d1mid2 = {fabs(turn_radius*delta1), normDistance(qt1, qt2, 2), fabs(turn_radius*delta2)};
 	qt1[2] = h1 + delta1;
-	qt2[2] = h2 + delta2;
+	qt2[2] = h2 - delta2;
 
 	return true;
 }
 
-void StateValidityChecker::twb_gettangent(Vector q1,short s1, Vector q2, short s2) {
+void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 	// updates qt1 and qt2
 
 	// q1,q2 are the centers of two circles, both with radius r
@@ -378,10 +396,10 @@ void StateValidityChecker::twb_gettangent(Vector q1,short s1, Vector q2, short s
 		qmid_y /= L;
 
 		// Tangent points
-		qt1[0] = q1[0] + x * qmid_x + y * qmid_y;
-		qt1[1] = q1[1] + x * qmid_y - y * qmid_x;
-		qt2[0] = q2[0] - x * qmid_x - y * qmid_y;
-		qt2[1] = q2[1] - x * qmid_y + y * qmid_x;
+		qt1[0] = q1[0] + x * qmid_x - y * qmid_y;
+		qt1[1] = q1[1] + x * qmid_y + y * qmid_x;
+		qt2[0] = q2[0] - x * qmid_x + y * qmid_y;
+		qt2[1] = q2[1] - x * qmid_y - y * qmid_x;
 	}
 	else {
 		printf("Error: twb_gettangent was passed s1=%d, s2=%d",s1,s2);
