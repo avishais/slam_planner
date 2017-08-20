@@ -1,9 +1,9 @@
 #compiler
 OMPL_DIR = /usr/local
 
-INC_PLANNERS = /home/avishai/Downloads/omplapp/ompl/Workspace/slam_planner/planners/
-INC_VALIDITY = /home/avishai/Downloads/omplapp/ompl/Workspace/slam_planner/validity_checkers/
-INC_RUN = /home/avishai/Downloads/omplapp/ompl/Workspace/slam_planner/run/
+INC_PLANNERS = /home/avishai/Downloads/omplapp/ompl/Workspace/slam/planners/
+INC_VALIDITY = /home/avishai/Downloads/omplapp/ompl/Workspace/slam/validity_checkers/
+INC_RUN = /home/avishai/Downloads/omplapp/ompl/Workspace/slam/run/
 
 CXX= g++
 CXXFLAGS= -I${OMPL_DIR}/include -I${OMPL_DIR}/lib/x86_64-linux-gnu
