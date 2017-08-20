@@ -32,31 +32,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Ioan Sucan */
+/* Author: Ioan Sucan, Avishai Sintov */
 
-#include <ompl/base/SpaceInformation.h>
-#include <ompl/base/spaces/SE3StateSpace.h>
-//#include <ompl/geometric/planners/rrt/RRTConnect.h>
-//#include <ompl/geometric/planners/rrt/RRT.h>
-#include <ompl/geometric/SimpleSetup.h>
+#include "plan.h"
 
-#include "../planners/myRRT.h"
-
-#include <ompl/config.h>
-#include <iostream>
-#include <fstream>
-
-namespace ob = ompl::base;
-namespace og = ompl::geometric;
-using namespace std;
-
-bool isStateValid(const ob::State *state) {
-	return true;
-}
-
-
-void plan(Vector q_start, Vector q_goal) {
-	int n = q_start.size();
+bool plan_slam::plan(Vector q_start, Vector q_goal) {
 
 	// construct the state space we are planning in
 	ob::StateSpacePtr Q(new ob::RealVectorStateSpace(n)); // A-space - state space of the rod - R^6
@@ -151,7 +131,12 @@ int main(int, char **) {
 	Vector q_start = {0, 0, 0};
 	Vector q_goal = {5.584, -2.0431, -1.5707};
 
-	plan(q_start, q_goal);
+	plan_slam pl;
+
+	clock_t st = clock();
+	pl.plan(q_start, q_goal);
+	double runtime = double(clock() - st) / CLOCKS_PER_SEC;
+	std::cout << "Net runtime: " << runtime << " seconds." << std::endl;
 
 	std::cout << std::endl << std::endl;
 

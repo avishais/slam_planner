@@ -17,7 +17,7 @@ if vid
     open(writerObj);
 end
 
-for i = 1:size(Q,1)
+for i = 1:1:size(Q,1)
     
     figure(1)
     clf
