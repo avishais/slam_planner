@@ -3,6 +3,8 @@ clc
 
 obs = load('../data/obs.txt');
 
+
+
 Q = load('../paths/path.txt');
 Qms = load('../paths/path_milestones.txt');
 % load('path1.mat');

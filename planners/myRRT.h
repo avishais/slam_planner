@@ -183,7 +183,6 @@ namespace ompl
             /** \brief The most recent goal motion.  Used for PlannerData computation */
             Motion                                         *lastGoalMotion_;
 
-
            /** My additions */
             void save2file(vector<Motion*> path);
         };

@@ -41,6 +41,8 @@
 #include "ompl/base/OptimizationObjective.h"
 #include "ompl/datastructures/NearestNeighbors.h"
 
+#include "../validity_checkers/StateValidityChecker.h"
+
 #include <limits>
 #include <vector>
 #include <queue>
@@ -76,7 +78,7 @@ namespace ompl
         */
 
         /** \brief Optimal Rapidly-exploring Random Trees */
-        class RRTstar : public base::Planner
+        class RRTstar : public base::Planner, StateValidityChecker
         {
         public:
 
@@ -483,6 +485,9 @@ namespace ompl
             {
                 return std::to_string(bestCost().value());
             }
+
+            /** My additions */
+            void save2file(vector<Motion*>);
         };
     }
 }

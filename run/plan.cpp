@@ -36,7 +36,62 @@
 
 #include "plan.h"
 
-bool plan_slam::plan(Vector q_start, Vector q_goal) {
+ob::PlannerPtr plan_slam::allocatePlanner(ob::SpaceInformationPtr si, plannerType p_type)
+{
+    switch (p_type)
+    {
+        case PLANNER_RRT:
+        {
+            return std::make_shared<og::RRT>(si);
+            break;
+        }
+        case PLANNER_RRTSTAR:
+        {
+            return std::make_shared<og::RRTstar>(si);
+            break;
+        }
+        default:
+        {
+            OMPL_ERROR("Planner-type enum is not implemented in allocation function.");
+            return ob::PlannerPtr(); // Address compiler warning re: no return value.
+            break;
+        }
+    }
+}
+
+/** Returns a structure representing the optimization objective to use
+    for optimal motion planning. This method returns an objective
+    which attempts to minimize the length in configuration space of
+    computed paths. */
+ob::OptimizationObjectivePtr plan_slam::getPathLengthObjective(const ob::SpaceInformationPtr& si)
+{
+    return ob::OptimizationObjectivePtr(new ob::PathLengthOptimizationObjective(si));
+}
+
+/** Return an optimization objective which attempts to minimiaze turn angle. */
+ob::OptimizationObjectivePtr plan_slam::getTurnObjective(const ob::SpaceInformationPtr& si)
+{
+    return ob::OptimizationObjectivePtr(new turnObjective(si));
+}
+
+ob::OptimizationObjectivePtr plan_slam::allocateObjective(ob::SpaceInformationPtr si, planningObjective objectiveType)
+{
+    switch (objectiveType)
+    {
+        case OBJECTIVE_PATHLENGTH:
+            return getPathLengthObjective(si);
+            break;
+        case OBJECTIVE_PATHTURN:
+            return getTurnObjective(si);
+            break;
+        default:
+            OMPL_ERROR("Optimization-objective enum is not implemented in allocation function.");
+            return ob::OptimizationObjectivePtr();
+            break;
+    }
+}
+
+bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType p_type, planningObjective o_type) {
 
 	// construct the state space we are planning in
 	ob::StateSpacePtr Q(new ob::RealVectorStateSpace(n)); // A-space - state space of the rod - R^6
@@ -80,9 +135,17 @@ bool plan_slam::plan(Vector q_start, Vector q_goal) {
 	 // set the start and goal states
 	 pdef->setStartAndGoalStates(start, goal);
 
+	 // If this is an optimizing planner, set the optimization objective
+	 if (p_type==PLANNER_RRTSTAR) {
+		 // Create the optimization objective specified by our command-line argument.
+		 // This helper function is simply a switch statement.
+		 pdef->setOptimizationObjective(allocateObjective(si, o_type));
+
+	 }
+
 	 // create a planner for the defined space
 	 // To add a planner, the #include library must be added above
-	 ob::PlannerPtr planner(new og::RRT(si));
+	 ob::PlannerPtr planner = allocatePlanner(si, p_type);
 
 	 // set the problem we are trying to solve for the planner
 	 planner->setProblemDefinition(pdef);
@@ -102,14 +165,14 @@ bool plan_slam::plan(Vector q_start, Vector q_goal) {
 
 	 // attempt to solve the problem within one second of planning time
 	 clock_t st = clock();
-	 ob::PlannerStatus solved = planner->solve(1.0);
-	 double runtime = double(clock() - st) / CLOCKS_PER_SEC;
+	 ob::PlannerStatus solved = planner->solve(runtime);
+	 double Ttime = double(clock() - st) / CLOCKS_PER_SEC;
 
 	if (solved) {
 		// get the goal representation from the problem definition (not the same as the goal state)
 		// and inquire about the found path
 		ob::PathPtr path = pdef->getSolutionPath();
-		std::cout << "Found solution in " << runtime << " seconds." << std::endl;
+		std::cout << "Found solution in " << Ttime << " seconds." << std::endl;
 
 		// print the path to screen
 		path->print(std::cout);  // Print as vectors
@@ -125,18 +188,38 @@ bool plan_slam::plan(Vector q_start, Vector q_goal) {
 	 std::cout << "No solution found" << std::endl;
 }
 
-int main(int, char **) {
+int main(int argn, char ** args) {
 	std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
+	double runtime;
+	plannerType p_type;
+	planningObjective o_type;
 
-	Vector q_start = {0, 0, 0};
+	if (argn == 1) {
+		runtime = 1; // sec
+		p_type = PLANNER_RRT;
+	}
+	else if (argn == 2) {
+		runtime = atof(args[1]);
+		p_type = PLANNER_RRT;
+	}
+	else {
+		runtime = atof(args[1]);
+		p_type = atoi(args[2])==1 ? PLANNER_RRT : PLANNER_RRTSTAR;
+		if (argn==4)
+			o_type = atoi(args[3])==1 ? OBJECTIVE_PATHLENGTH : OBJECTIVE_PATHTURN;
+		else
+			o_type = OBJECTIVE_PATHLENGTH;
+	}
+
+	Vector q_start = {0, 0, 3.14/4};
 	Vector q_goal = {5.584, -5.0431, -1.5707};
 
 	plan_slam pl;
 
 	clock_t st = clock();
-	pl.plan(q_start, q_goal);
-	double runtime = double(clock() - st) / CLOCKS_PER_SEC;
-	std::cout << "Net runtime: " << runtime << " seconds." << std::endl;
+	pl.plan(q_start, q_goal, runtime, p_type, o_type);
+	double Ntime = double(clock() - st) / CLOCKS_PER_SEC;
+	std::cout << "Net runtime: " << Ntime << " seconds." << std::endl;
 
 	std::cout << std::endl << std::endl;
 

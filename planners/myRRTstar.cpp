@@ -34,7 +34,7 @@
 
 /* Authors: Alejandro Perez, Sertac Karaman, Ryan Luna, Luis G. Torres, Ioan Sucan, Javier V Gomez, Jonathan Gammell */
 
-#include "ompl/geometric/planners/rrt/RRTstar.h"
+//#include "ompl/geometric/planners/rrt/RRTstar.h"
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/tools/config/SelfConfig.h"
 #include "ompl/base/objectives/PathLengthOptimizationObjective.h"
@@ -47,6 +47,8 @@
 #include <limits>
 #include <boost/math/constants/constants.hpp>
 #include <vector>
+
+#include "myRRTstar.h"
 
 ompl::geometric::RRTstar::RRTstar(const base::SpaceInformationPtr &si) :
     base::Planner(si, "RRTstar"),
@@ -69,8 +71,12 @@ ompl::geometric::RRTstar::RRTstar(const base::SpaceInformationPtr &si) :
     bestCost_(std::numeric_limits<double>::quiet_NaN()),
     prunedCost_(std::numeric_limits<double>::quiet_NaN()),
     prunedMeasure_(0.0),
-    iterations_(0u)
+    iterations_(0u),
+	StateValidityChecker(si)
 {
+
+    defaultSettings(); // Avishai
+
     specs_.approximateSolutions = true;
     specs_.optimizingPaths = true;
     specs_.canReportIntermediateSolutions = true;
@@ -280,7 +286,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
         }
 
         // Check if the motion between the nearest state and the state to add is valid
-        if (si_->checkMotion(nmotion->state, dstate))
+        if (checkMotionTW(nmotion->state, dstate))
         {
             // create a motion
             Motion *motion = new Motion(si_);
@@ -345,7 +351,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
                      i != sortedCostIndices.begin() + nbh.size();
                      ++i)
                 {
-                    if (nbh[*i] == nmotion || si_->checkMotion(nbh[*i]->state, motion->state))
+                    if (nbh[*i] == nmotion || checkMotionTW(nbh[*i]->state, motion->state))
                     {
                         motion->incCost = incCosts[*i];
                         motion->cost = costs[*i];
@@ -369,7 +375,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
                         costs[i] = opt_->combineCosts(nbh[i]->cost, incCosts[i]);
                         if (opt_->isCostBetterThan(costs[i], motion->cost))
                         {
-                            if (si_->checkMotion(nbh[i]->state, motion->state))
+                            if (checkMotionTW(nbh[i]->state, motion->state))
                             {
                                 motion->incCost = incCosts[i];
                                 motion->cost = costs[i];
@@ -425,7 +431,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
                         bool motionValid;
                         if (valid[i] == 0)
                         {
-                            motionValid = si_->checkMotion(motion->state, nbh[i]->state);
+                            motionValid = checkMotionTW(motion->state, nbh[i]->state);
                         }
                         else
                         {
@@ -549,6 +555,8 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
         PathGeometric *geoPath = new PathGeometric(si_);
         for (int i = mpath.size() - 1 ; i >= 0 ; --i)
             geoPath->append(mpath[i]->state);
+
+        save2file(mpath);
 
         base::PathPtr path(geoPath);
         // Add the solution path.
@@ -1066,4 +1074,80 @@ void ompl::geometric::RRTstar::calculateRewiringLowerBounds()
     // r_rrg > 2*(1+1/d)^(1/d)*(measure/ballvolume)^(1/d)
     // If we're not using the informed measure, prunedMeasure_ will be set to si_->getSpaceMeasure();
     r_rrg_ = rewireFactor_ * 2.0 * std::pow((1.0 + 1.0/dimDbl) * (prunedMeasure_ / unitNBallMeasure(si_->getStateDimension())), 1.0 / dimDbl);
+}
+
+void ompl::geometric::RRTstar::save2file(vector<Motion*> mpath) {
+
+	cout << "Logging path to files..." << endl;
+
+	int n = get_n();
+	Vector q(n);
+	vector<Motion*> path;
+
+	{
+		// Open a_path file
+		std::ofstream myfile;
+		myfile.open("./paths/path_milestones.txt");
+
+		for (int i = mpath.size()-1 ; i >= 0; i--) {
+			retrieveStateVector(mpath[i]->state, q);
+			for (int j = 0; j < n; j++) {
+				myfile << q[j] << " ";
+			}
+			myfile << endl;
+			path.push_back(mpath[i]);
+		}
+		myfile.close();
+	}
+
+	{ // Reconstruct RBS
+
+		// Open a_path file
+		std::ofstream fp, myfile;
+		std::ifstream myfile1;
+		myfile.open("./paths/temp.txt",ios::out);
+
+		retrieveStateVector(path[0]->state, q);
+		for (int j = 0; j < q.size(); j++) {
+			myfile << q[j] << " ";
+		}
+		myfile << endl;
+
+		int count = 1;
+		for (int i = 1; i < path.size(); i++) {
+
+			Matrix M;
+			bool valid = reconstructMotionTW(path[i-1]->state, path[i]->state, M);
+			bool validC = checkMotionTW(path[i-1]->state, path[i]->state);
+
+
+			if (!valid) {
+				cout << validC << endl;
+				cout << "Error in reconstructing...\n";
+				return;
+			}
+
+			for (int k = 1; k < M.size(); k++) {
+				for (int j = 0; j<M[k].size(); j++) {
+					myfile << M[k][j] << " ";
+				}
+				myfile << endl;
+				count++;
+			}
+		}
+
+		// Update file with number of conf.
+		myfile.close();
+		myfile1.open("./paths/temp.txt",ios::in);
+		fp.open("./paths/path.txt",ios::out);
+		//fp << count << endl;
+		std::string line;
+		while(myfile1.good()) {
+			std::getline(myfile1, line ,'\n');
+			fp << line << endl;
+		}
+		myfile1.close();
+		fp.close();
+		std::remove("./paths/temp.txt");
+	}
 }

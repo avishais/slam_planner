@@ -101,22 +101,6 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
 {
 	Vector q(n);
 
-	//=====
-	/*Vector q1 = {0.2,-0.1,0.5};
-	Vector q2 = {0.961094811725775,-0.4,1.880581031756361};
-	ob::State *s1 = si_->allocState();
-	ob::State *s2 = si_->allocState();
-
-	updateStateVector(s1, q1);
-	updateStateVector(s2, q2);
-
-	checkMotionTW(s1, s2);
-
-	exit(1);*/
-
-
-	//=====
-
     checkValidity();
     base::Goal                 *goal   = pdef_->getGoal().get();
     base::GoalSampleableRegion *goal_s = dynamic_cast<base::GoalSampleableRegion*>(goal);
