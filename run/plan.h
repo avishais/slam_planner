@@ -44,7 +44,7 @@ enum plannerType
 enum planningObjective
 {
     OBJECTIVE_PATHLENGTH,
-    OBJECTIVE_PATHTURN
+	OBJECTIVE_MINE
 };
 
 /** Defines an optimization objective which attempts to minimize the turn angle
@@ -54,19 +54,17 @@ enum planningObjective
     then is inherit from that base class and define our specific state
     cost function by overriding the stateCost() method.
  */
-class turnObjective : public ob::StateCostIntegralObjective
+class myObjective : public ob::StateCostIntegralObjective, StateValidityChecker
 {
 public:
-    turnObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true) {}
+    myObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true), StateValidityChecker(si) {}
 
     ob::Cost stateCost(const ob::State* s) const
     {
-    	const ob::RealVectorStateSpace::StateType* state =
-    			state->as<ob::RealVectorStateSpace::StateType>();
+    	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
+    	double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
 
-    	// Extract the robot's (x,y) position from its state
-    	double theta = state->values[2];
-    	return ob::Cost(1 / theta);
+    	return ob::Cost(1 / C);
     }
 };
 
@@ -89,7 +87,7 @@ public:
 	ob::OptimizationObjectivePtr getPathLengthObjective(const ob::SpaceInformationPtr&);
 
 	/** Return an optimization objective which attempts to minimiaze turn angle. */
-	ob::OptimizationObjectivePtr getTurnObjective(const ob::SpaceInformationPtr& si);
+	ob::OptimizationObjectivePtr getMyObjective(const ob::SpaceInformationPtr& si);
 
 	 // Create the optimization objective specified by our command-line argument.
 	 // This helper function is simply a switch statement.

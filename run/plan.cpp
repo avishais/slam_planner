@@ -69,9 +69,9 @@ ob::OptimizationObjectivePtr plan_slam::getPathLengthObjective(const ob::SpaceIn
 }
 
 /** Return an optimization objective which attempts to minimiaze turn angle. */
-ob::OptimizationObjectivePtr plan_slam::getTurnObjective(const ob::SpaceInformationPtr& si)
+ob::OptimizationObjectivePtr plan_slam::getMyObjective(const ob::SpaceInformationPtr& si)
 {
-    return ob::OptimizationObjectivePtr(new turnObjective(si));
+    return ob::OptimizationObjectivePtr(new myObjective(si));
 }
 
 ob::OptimizationObjectivePtr plan_slam::allocateObjective(ob::SpaceInformationPtr si, planningObjective objectiveType)
@@ -81,8 +81,8 @@ ob::OptimizationObjectivePtr plan_slam::allocateObjective(ob::SpaceInformationPt
         case OBJECTIVE_PATHLENGTH:
             return getPathLengthObjective(si);
             break;
-        case OBJECTIVE_PATHTURN:
-            return getTurnObjective(si);
+        case OBJECTIVE_MINE:
+            return getMyObjective(si);
             break;
         default:
             OMPL_ERROR("Optimization-objective enum is not implemented in allocation function.");
@@ -206,7 +206,7 @@ int main(int argn, char ** args) {
 		runtime = atof(args[1]);
 		p_type = atoi(args[2])==1 ? PLANNER_RRT : PLANNER_RRTSTAR;
 		if (argn==4)
-			o_type = atoi(args[3])==1 ? OBJECTIVE_PATHLENGTH : OBJECTIVE_PATHTURN;
+			o_type = atoi(args[3])==1 ? OBJECTIVE_PATHLENGTH : OBJECTIVE_MINE;
 		else
 			o_type = OBJECTIVE_PATHLENGTH;
 	}
