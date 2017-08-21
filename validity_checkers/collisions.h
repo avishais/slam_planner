@@ -30,13 +30,6 @@ typedef KDTreeVectorOfVectorsAdaptor< Matrix, double > my_kd_tree_t;
 using namespace std;
 using namespace nanoflann;
 
-typedef struct {
-	double x;
-	double y;
-
-	double r; // Radius of obstacle
-} obst;
-
 struct kNeighborSoln {
 	VectorInt neighbors;
 	Vector dist;
@@ -51,13 +44,12 @@ public:
 
 	bool check_collisions(Vector, double);
 
-	void print_obs(obst o);
+	void print_obs(Vector o);
 
 	void kNeighbors(my_kd_tree_t&, Vector, kNeighborSoln&, size_t, bool = false);
 
 
 private:
-	vector <obst> obs;
 	Matrix Obs;
 	double obs_r = 0.05; // Assumed point obstacle radius
 

@@ -129,7 +129,7 @@ int main(int, char **) {
 	std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 
 	Vector q_start = {0, 0, 0};
-	Vector q_goal = {5.584, -2.0431, -1.5707};
+	Vector q_goal = {5.584, -5.0431, -1.5707};
 
 	plan_slam pl;
 

@@ -22,28 +22,29 @@ collisionDetection::collisionDetection() : KDtree(2, {{0,0},{1,1}}, 1) { // Dumm
 
 void collisionDetection::load_obstacles() {
 
-	obst o_temp;
+	double x, y, r;
 
 	ifstream fq;
 	fq.open(path_file);
 
 	int i = 0;
 	while(!fq.eof()) {
-		fq >> o_temp.x;
-		fq >> o_temp.y;
-		fq >> o_temp.r;
-		obs.push_back(o_temp);
-		Obs.push_back({o_temp.x, o_temp.y});
+		fq >> x;
+		fq >> y;
+		fq >> r;
+		Obs.push_back({x, y});
 		i++;
 	}
 	fq.close();
 
-	num_of_obs = obs.size();
+	obs_r = r;
+
+	num_of_obs = Obs.size();
 
 }
 
-void collisionDetection::print_obs(obst o) {
-	cout << "x: " << o.x << ", y: " << o.y << ", radius: " <<  o.r << endl;
+void collisionDetection::print_obs(Vector o) {
+	cout << "x: " << o[0] << ", y: " << o[1] << ", radius: " <<  obs_r << endl;
 }
 
 bool collisionDetection::check_collisions(Vector q, double robot_radius) {
@@ -54,7 +55,7 @@ bool collisionDetection::check_collisions(Vector q, double robot_radius) {
 
 	// Brute-force collision checking
 	/*for (int i = 0; i < num_of_obs; i++) {
-		if ( ((q[0]-obs[i].x)*(q[0]-obs[i].x) + (q[1]-obs[i].y)*(q[1]-obs[i].y)) <= (robot_radius + obs[i].r)*(robot_radius + obs[i].r) )
+		if ( ((q[0]-Obs[i][0])*(q[0]-Obs[i][0]) + (q[1]-Obs[i][1])*(q[1]-Obs[i][1])) <= (robot_radius + obs_r)*(robot_radius + obs_r) )
 			return false;
 	}*/
 
