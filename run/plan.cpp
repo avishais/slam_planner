@@ -74,6 +74,16 @@ ob::OptimizationObjectivePtr plan_slam::getMyObjective(const ob::SpaceInformatio
     return ob::OptimizationObjectivePtr(new myObjective(si));
 }
 
+/** Create an optimization objective equivalent to the one returned by
+    getBalancedObjective1(), but use an alternate syntax. */
+ob::OptimizationObjectivePtr plan_slam::getWeightedObjective(const ob::SpaceInformationPtr& si)
+{
+    ob::OptimizationObjectivePtr lengthObj(new ob::PathLengthOptimizationObjective(si));
+    ob::OptimizationObjectivePtr customObj(new myObjective(si));
+
+    return 1.0*lengthObj + customObj;
+}
+
 ob::OptimizationObjectivePtr plan_slam::allocateObjective(ob::SpaceInformationPtr si, planningObjective objectiveType)
 {
     switch (objectiveType)
@@ -84,11 +94,29 @@ ob::OptimizationObjectivePtr plan_slam::allocateObjective(ob::SpaceInformationPt
         case OBJECTIVE_MINE:
             return getMyObjective(si);
             break;
+        case OBJECTIVE_WEIGHT:
+        	return getWeightedObjective(si);
+        	break;
         default:
             OMPL_ERROR("Optimization-objective enum is not implemented in allocation function.");
             return ob::OptimizationObjectivePtr();
             break;
     }
+}
+
+void plan_slam::getPath(ob::ProblemDefinitionPtr pdef, Matrix &M) {
+
+	og::PathGeometric Path( dynamic_cast< const og::PathGeometric& >( *pdef->getSolutionPath()));
+	const std::vector< ob::State* > &states = Path.getStates();
+	ob::State *state;
+	Vector q(3);
+	for( size_t i = 0 ; i < states.size( ) ; ++i ) {
+		state = states[i]->as< ob::State >();
+		q[0] = state->as<ob::RealVectorStateSpace::StateType>()->values[0];
+		q[1] = state->as<ob::RealVectorStateSpace::StateType>()->values[1];
+		q[2] = state->as<ob::RealVectorStateSpace::StateType>()->values[2];
+		M.push_back(q);
+	}
 }
 
 bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType p_type, planningObjective o_type) {
@@ -140,7 +168,6 @@ bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType 
 		 // Create the optimization objective specified by our command-line argument.
 		 // This helper function is simply a switch statement.
 		 pdef->setOptimizationObjective(allocateObjective(si, o_type));
-
 	 }
 
 	 // create a planner for the defined space
@@ -171,8 +198,12 @@ bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType 
 	if (solved) {
 		// get the goal representation from the problem definition (not the same as the goal state)
 		// and inquire about the found path
-		ob::PathPtr path = pdef->getSolutionPath();
+		//ob::PathPtr path = pdef->getSolutionPath();
 		std::cout << "Found solution in " << Ttime << " seconds." << std::endl;
+
+		getPath(pdef, Path);
+		//StateValidityChecker svc;
+		//svc.printMatrix(Path);
 
 		// print the path to screen
 		path->print(std::cout);  // Print as vectors
@@ -188,6 +219,7 @@ bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType 
 	 std::cout << "No solution found" << std::endl;
 }
 
+// Run planner in this form: ./<exe-file> <runtime> <planner type> <optimizer type>
 int main(int argn, char ** args) {
 	std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 	double runtime;

@@ -37,7 +37,16 @@ public:
 		qc2.resize(2);
 		d1mid2.resize(3);
 		};
-	StateValidityChecker() {};
+	StateValidityChecker() {
+		v.resize(3);
+		w.resize(3);
+		t.resize(3);
+		qt1.resize(3);
+		qt2.resize(3);
+		qc1.resize(2);
+		qc2.resize(2);
+		d1mid2.resize(3);
+	};
 
 	void retrieveStateVector(const ob::State *state, Vector &a);
 	void updateStateVector(const ob::State *state, Vector q);

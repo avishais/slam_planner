@@ -44,7 +44,8 @@ enum plannerType
 enum planningObjective
 {
     OBJECTIVE_PATHLENGTH,
-	OBJECTIVE_MINE
+	OBJECTIVE_MINE,
+	OBJECTIVE_WEIGHT
 };
 
 /** Defines an optimization objective which attempts to minimize the turn angle
@@ -62,7 +63,8 @@ public:
     ob::Cost stateCost(const ob::State* s) const
     {
     	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
-    	double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
+    	//double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
+    	double C = 1. / fabs(Q->values[1]-(-0.5));
 
     	return ob::Cost(1 / C);
     }
@@ -89,16 +91,30 @@ public:
 	/** Return an optimization objective which attempts to minimiaze turn angle. */
 	ob::OptimizationObjectivePtr getMyObjective(const ob::SpaceInformationPtr& si);
 
+	/** Create an optimization objective which attempts to optimize both
+	    path length and custom cost function. We do this by defining our individual
+	    objectives, then weight them. */
+	ob::OptimizationObjectivePtr getWeightedObjective(const ob::SpaceInformationPtr& si);
+
 	 // Create the optimization objective specified by our command-line argument.
 	 // This helper function is simply a switch statement.
 	ob::OptimizationObjectivePtr allocateObjective(ob::SpaceInformationPtr, planningObjective);
 
+	/** Extract solution path */
+	void getPath(ob::ProblemDefinitionPtr pdef, Matrix&);
 
 	bool solved_bool;
 	double total_runtime;
 
+	Matrix get_path_matrix() {
+		return Path;
+	}
+
+
 private:
 	int n = 3;
+
+	Matrix Path;
 
 };
 
