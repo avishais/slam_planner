@@ -13,7 +13,7 @@ Qms = load('../paths/path_milestones.txt');
 vid = false;
 
 if vid
-    writerObj = VideoWriter('./videos/slam_rob.avi');%,'MPEG-4');
+    writerObj = VideoWriter('./videos/slam_rob1.avi');%,'MPEG-4');
     open(writerObj);
 end
 
@@ -23,7 +23,8 @@ for i = 1:1:size(Q,1)
     clf
     hold on
     axis equal
-    f = viscircles(obs(:,1:2),obs(:,3),'color','black');
+    %f = viscircles(obs(:,1:2),obs(:,3),'color','black');
+    plot(obs(:,1),obs(:,2),'.k');
     
     plot(Q(:,1),Q(:,2),'.-k');
     plot(Qms(:,1),Qms(:,2),'or');

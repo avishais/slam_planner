@@ -102,7 +102,7 @@ bool plan_slam::plan(Vector q_start, Vector q_goal) {
 
 	 // attempt to solve the problem within one second of planning time
 	 clock_t st = clock();
-	 ob::PlannerStatus solved = planner->solve(10.0);
+	 ob::PlannerStatus solved = planner->solve(1.0);
 	 double runtime = double(clock() - st) / CLOCKS_PER_SEC;
 
 	if (solved) {
