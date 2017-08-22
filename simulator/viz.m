@@ -3,12 +3,10 @@ clc
 
 obs = load('../data/obs.txt');
 
-
-
 Q = load('../paths/path.txt');
 Qms = load('../paths/path_milestones.txt');
-% load('path1.mat');
-% Q = path_final';
+
+load('../data/data.mat');
 
 %%
 
@@ -36,7 +34,11 @@ for i = 1:1:size(Q,1)
     
     UGV(Q(i,:)');
     
+    [~,idx]=isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,Norm_corner,kinect,Obs_corner,std_corner,Mean_corner);
+    plot(Corner_w(1,idx),Corner_w(2,idx),'*r');
+    
     hold off
+    axis([min(obs(:,1)) max(obs(:,1)) min(obs(:,2)) max(obs(:,2))]);
     drawnow;
     
     if vid

@@ -65,12 +65,17 @@ ob::PlannerPtr plan_slam::allocatePlanner(ob::SpaceInformationPtr si, plannerTyp
     computed paths. */
 ob::OptimizationObjectivePtr plan_slam::getPathLengthObjective(const ob::SpaceInformationPtr& si)
 {
+
+    OMPL_INFORM("Loading path length optimization objective.");
+
     return ob::OptimizationObjectivePtr(new ob::PathLengthOptimizationObjective(si));
 }
 
 /** Return an optimization objective which attempts to minimiaze turn angle. */
 ob::OptimizationObjectivePtr plan_slam::getMyObjective(const ob::SpaceInformationPtr& si)
 {
+    OMPL_INFORM("Loading custom optimization objective.");
+
     return ob::OptimizationObjectivePtr(new myObjective(si));
 }
 
@@ -78,6 +83,8 @@ ob::OptimizationObjectivePtr plan_slam::getMyObjective(const ob::SpaceInformatio
     getBalancedObjective1(), but use an alternate syntax. */
 ob::OptimizationObjectivePtr plan_slam::getWeightedObjective(const ob::SpaceInformationPtr& si)
 {
+    OMPL_INFORM("Loading multi-objective optimization.");
+
     ob::OptimizationObjectivePtr lengthObj(new ob::PathLengthOptimizationObjective(si));
     ob::OptimizationObjectivePtr customObj(new myObjective(si));
 
@@ -244,7 +251,7 @@ int main(int argn, char ** args) {
 	}
 
 	Vector q_start = {0, 0, 3.14/4};
-	Vector q_goal = {5.584, -5.0431, -1.5707};
+	Vector q_goal = {5.584, -2.0431, -1.5707};
 
 	plan_slam pl;
 
