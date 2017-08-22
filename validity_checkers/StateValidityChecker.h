@@ -62,7 +62,7 @@ public:
 	bool isValid(Vector q);
 
 	// OMPL check local connection
-	bool checkMotion(const ob::State *s1, const ob::State *s2);
+	bool checkMotion(const ob::State *s1, const ob::State *s2, bool = false);
 
 	// Check local connection of a two-wheels kinematic motion
 	bool checkMotionTW(const ob::State *s1, const ob::State *s2);
@@ -90,12 +90,13 @@ public:
 		return n;
 	}
 
+
 private:
 	ob::StateSpace *stateSpace_;
 	ob::SpaceInformation    *mysi_;
 
 	/** Robot properties */
-	double robot_r = 0.4; // Robot radius
+	double robot_r = 0.3; // Robot radius
 	double turn_radius = 0.25;
 	double dt = 0.2; // Interval in which to interpolate the motion
 
@@ -105,6 +106,7 @@ private:
 	Vector qt1, qt2;
 	Vector qc1, qc2;
 	Vector d1mid2; // {d1cur, dmidcur, d2cur}
+
 
 };
 

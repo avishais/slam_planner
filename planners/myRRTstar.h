@@ -488,6 +488,8 @@ namespace ompl
 
             /** My additions */
             void save2file(vector<Motion*>);
+
+            void display_costs(vector<Motion*>);
         };
     }
 }

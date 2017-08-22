@@ -54,6 +54,8 @@ int camera::countVisible(float x_w, float y_w, float theta_rad_w) const {
     int num_pt=map_vec.size();
     int num_visible=0;
 
+    //cout << x_w << " " << y_w << " " << theta_rad_w << endl;
+
     // I modified this section to enable the function to be const. (requirement of OMPL)
     Eigen::Matrix4f T_wb;
     T_wb<<(float)(cos(theta_rad_w)),  (float)(-sin(theta_rad_w)), 0, x_w,

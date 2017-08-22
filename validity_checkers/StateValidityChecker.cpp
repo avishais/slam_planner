@@ -160,7 +160,7 @@ double StateValidityChecker::normDistance(Vector a1, Vector a2, int d) {
 
 // ========================== Two-wheels motion ===========================================================
 
-bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s2) {
+bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s2, bool calc_cost) {
 	// We assume that s1 is in the tree and therefore valid
 
 	Vector q1(n), q2(n), q(n), q_temp(n);
@@ -183,6 +183,11 @@ bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s
 				return false;
 			Q.push_back(q_temp);
 		}
+	}
+
+	mCost = 0;
+	if (calc_cost) {
+		mCost =  motionCost(Q);
 	}
 
 	return true;
@@ -414,8 +419,22 @@ double StateValidityChecker::twb_getangle(Vector q1, Vector q2) {
 }
 
 
+// ============================== Optimization functions ===================================
 
+ob::Cost StateValidityChecker::motionCost(Matrix Q) {
 
+	return pathLengthObjective(Q);
+
+}
+
+ob::Cost StateValidityChecker::pathLengthObjective(Matrix Q) {
+
+	ob::Cost C(0.0);
+	for (int i = 1; i < Q.size(); i++)
+		C.value() += normDistance(Q[i-1], Q[i]);
+
+	return C;
+}
 
 
 

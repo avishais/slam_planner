@@ -17,6 +17,7 @@ if vid
     open(writerObj);
 end
 
+cost = 0;
 for i = 1:1:size(Q,1)
     
     figure(1)
@@ -34,8 +35,15 @@ for i = 1:1:size(Q,1)
     
     UGV(Q(i,:)');
     
-    [~,idx]=isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,Norm_corner,kinect,Obs_corner,std_corner,Mean_corner);
+    [n_visible,idx]=isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,Norm_corner,kinect,Obs_corner,std_corner,Mean_corner);
     plot(Corner_w(1,idx),Corner_w(2,idx),'*r');
+    disp(n_visible);
+    if n_visible < 10 
+        C = 1e-5;
+    else
+        C = n_visible;
+    end
+    cost = cost + 1/C;
     
     hold off
     axis([min(obs(:,1)) max(obs(:,1)) min(obs(:,2)) max(obs(:,2))]);
@@ -49,6 +57,8 @@ for i = 1:1:size(Q,1)
     end
     
 end
+
+disp(['Cost of path: ' num2str(cost)]);
 
 if vid
     close(writerObj);

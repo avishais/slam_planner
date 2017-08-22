@@ -254,6 +254,16 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
     // our functor for sorting nearest neighbors
     CostIndexCompare compareFn(costs, *opt_);
 
+    // ========
+    goal_s->sampleGoal(rstate);
+    printStateVector(startMotions_[0]->state);
+    printStateVector(rstate);
+
+    cout << opt_->motionCost(startMotions_[0]->state, rstate) << endl;
+    exit(1);
+
+    // ========
+
     while (ptc == false)
     {
         iterations_++;
@@ -557,6 +567,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             geoPath->append(mpath[i]->state);
 
         save2file(mpath);
+        display_costs(mpath);
 
         base::PathPtr path(geoPath);
         // Add the solution path.
@@ -569,6 +580,9 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
         pdef_->addSolutionPath(psol);
 
         addedSolution = true;
+
+        if (approximate)
+        	OMPL_INFORM("Approximated solution.");
     }
 
     si_->freeState(xstate);
@@ -1074,6 +1088,26 @@ void ompl::geometric::RRTstar::calculateRewiringLowerBounds()
     // r_rrg > 2*(1+1/d)^(1/d)*(measure/ballvolume)^(1/d)
     // If we're not using the informed measure, prunedMeasure_ will be set to si_->getSpaceMeasure();
     r_rrg_ = rewireFactor_ * 2.0 * std::pow((1.0 + 1.0/dimDbl) * (prunedMeasure_ / unitNBallMeasure(si_->getStateDimension())), 1.0 / dimDbl);
+}
+
+void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
+
+	Vector q(3);
+
+	double cost2go = 0;
+	for (int i = mpath.size()-1 ; i >= 0; i--) {
+		cout << " ------- " << i << endl;
+		printStateVector(mpath[i]->state);
+		cout << mpath[i]->cost << " " << mpath[i]->incCost << endl;
+
+		retrieveStateVector(mpath[i]->state, q);
+		int nv = countVisible(q[0], q[1], q[2]);
+		double cost =  1/(nv < 10 ? 1e-5 : (double)nv);
+		cout << "n_visible: " << nv << ", state cost: " << cost << endl;
+		cost2go += cost;
+	}
+
+	cout << "Cost2go: " << cost2go << endl;
 }
 
 void ompl::geometric::RRTstar::save2file(vector<Motion*> mpath) {

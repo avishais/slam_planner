@@ -195,7 +195,7 @@ bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType 
 	 //si->printProperties(std::cout); // Prints state space properties, average length, dimension ...
 
 	 // print the problem settings
-	 pdef->print(std::cout); // Prints problem definition such as start and goal states and optimization objective
+	 //pdef->print(std::cout); // Prints problem definition such as start and goal states and optimization objective
 
 	 // attempt to solve the problem within one second of planning time
 	 clock_t st = clock();

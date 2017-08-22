@@ -17,7 +17,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-//using namespace std;
+using namespace std;
 
 class camera
 {
