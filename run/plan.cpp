@@ -206,7 +206,7 @@ bool plan_slam::plan(Vector q_start, Vector q_goal, double runtime, plannerType 
 		//svc.printMatrix(Path);
 
 		// print the path to screen
-		path->print(std::cout);  // Print as vectors
+		//path->print(std::cout);  // Print as vectors
 
 		// Save path to file
 		//std::ofstream myfile;

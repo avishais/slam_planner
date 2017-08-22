@@ -63,7 +63,7 @@ q.parent = 0;
 path = cell(1);
 path_final = [];
 %create a new random x,y configurations
-iter = 200000;
+iter = 10000;
 config_test_x = (6.4+1)*rand([1,iter])-1;    %400 is hardcoded limit of the world
 config_test_y = (4.85+2)*rand([1,iter])-4.85;
 config_test=[config_test_x;config_test_y];

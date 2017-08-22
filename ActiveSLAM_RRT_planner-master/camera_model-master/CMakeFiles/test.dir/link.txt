@@ -1,0 +1,1 @@
+/usr/bin/c++    -Wall   -O3 -march=native -std=c++11 -O3 -DNDEBUG    CMakeFiles/test.dir/example/test.cc.o  -o example/test -rdynamic lib/libcamera.so -Wl,-rpath,/home/avishai/Downloads/omplapp/ompl/Workspace/slam_planner/ActiveSLAM_RRT_planner-master/camera_model-master/lib 

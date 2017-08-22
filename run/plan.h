@@ -48,7 +48,7 @@ enum planningObjective
 	OBJECTIVE_WEIGHT
 };
 
-/** Defines an optimization objective which attempts to minimize the turn angle
+/** Defines an optimization objective which attempts to maximize the features seen by the camera
  *
     The class StateCostIntegralObjective represents objectives as
     summations of state costs, just like we require. All we need to do
@@ -64,9 +64,10 @@ public:
     {
     	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
     	//double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
-    	double C = 1. / fabs(Q->values[1]-(-0.5));
+    	//double C = 1. / fabs(Q->values[1]-(-0.5));
+    	int C = countVisible((float)Q->values[0], (float)Q->values[1], (float)Q->values[2]);
 
-    	return ob::Cost(1 / C);
+    	return ob::Cost(1 / (double)C);
     }
 };
 

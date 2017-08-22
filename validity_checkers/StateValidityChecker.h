@@ -16,6 +16,11 @@
 #include <ompl/config.h>
 
 #include "collisions.h"
+#include "camera.h"
+
+#define MAP_FILE "./data/Corner_Map_S.txt"
+#define UB_FILE "./data/upper_bound.txt"
+#define LB_FILE "./data/lower_bound.txt"
 
 #include <iostream>
 
@@ -24,10 +29,10 @@ using namespace std;
 
 #define PI 3.1416
 
-class StateValidityChecker : public collisionDetection
+class StateValidityChecker : public collisionDetection, public camera
 {
 public:
-	StateValidityChecker(const ob::SpaceInformationPtr &si) : mysi_(si.get()) {
+	StateValidityChecker(const ob::SpaceInformationPtr &si) : mysi_(si.get()), camera(MAP_FILE, UB_FILE, LB_FILE) {
 		v.resize(3);
 		w.resize(3);
 		t.resize(3);
@@ -100,7 +105,6 @@ private:
 	Vector qt1, qt2;
 	Vector qc1, qc2;
 	Vector d1mid2; // {d1cur, dmidcur, d2cur}
-
 
 };
 
