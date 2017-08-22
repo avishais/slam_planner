@@ -282,11 +282,8 @@ void ompl::geometric::RRT::save2file(vector<Motion*> mpath) {
 
 			Matrix M;
 			bool valid = reconstructMotionTW(path[i-1]->state, path[i]->state, M);
-			bool validC = checkMotionTW(path[i-1]->state, path[i]->state);
-
 
 			if (!valid) {
-				cout << validC << endl;
 				cout << "Error in reconstructing...\n";
 				return;
 			}
