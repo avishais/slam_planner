@@ -80,6 +80,7 @@ public:
 	void printVector(T);
 	void printMatrix(Matrix);
 	double normDistance(Vector, Vector, int = -1) const;
+	void log_path_file(Matrix);
 
 	const int n = 3; // State dimension
 	int get_n() {
@@ -95,8 +96,8 @@ private:
 	ob::SpaceInformation    *mysi_;
 
 	/** Robot properties */
-	double robot_r = 0.3; // Robot radius
-	double turn_radius = 0.25;
+	double robot_r = 0.25; // Robot radius
+	double turn_radius = 0.1;
 	double dt = 0.2; // Interval in which to interpolate the motion
 };
 

@@ -20,6 +20,7 @@ end
 
 cost = 0;
 Cost_length = 0;
+thres = 10;
 for i = 1:1:size(Q,1)
     
     figure(1)
@@ -48,7 +49,10 @@ for i = 1:1:size(Q,1)
     plot(Corner_w(1,idex),Corner_w(2,idex),'*r');
     %disp(Q(i,:));
     disp(n_visible);
-    if (i>1 && i<size(Q,1))
+    if i > 1 
+        if n_visible < thres
+            n_visible = 1e-4;
+        end
         cost = cost + 1/n_visible;
     end
     
@@ -72,7 +76,7 @@ for i = 1:1:size(Q,1)
     
 end
 
-disp(['Cost of path: ' num2str(cost)]);
+disp(['Cost of path: ' num2str(cost) ', ' num2str(1/cost) ]);
 disp(['Cost length: ' num2str(Cost_length)]);
 
 if vid

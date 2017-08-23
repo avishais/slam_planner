@@ -59,10 +59,10 @@ bool StateValidChecker::isValid(const ob::State *state) {
 
 bool StateValidChecker::isValid(Vector q) {
 
-	bool col = check_collisions(q, robot_r);
-	bool cam = IsStateVisiblilty(q[0], q[1], q[2]);
+	//if (!check_collisions(q, robot_r))
+		//return false;
 
-	return col && cam;
+	return IsStateVisiblilty(q[0], q[1], q[2]);
 }
 
 bool StateValidChecker::checkMotion(const ob::State *s1, const ob::State *s2)
@@ -157,6 +157,23 @@ double StateValidChecker::normDistance(Vector a1, Vector a2, int d) const {
 	for (int i=0; i < d; i++)
 		sum += (a1[i]-a2[i])*(a1[i]-a2[i]);
 	return sqrt(sum);
+}
+
+void StateValidChecker::log_path_file(Matrix M) {
+
+	std::ofstream mf;
+
+	mf.open("./paths/path.txt");
+
+	//mf << M.size() << endl;
+
+	for (int i = 0; i < M.size(); i++) {
+		for (int j = 0; j < M[0].size(); j++)
+			mf << M[i][j] << " ";
+		mf << endl;
+	}
+
+	mf.close();
 }
 
 // ========================== Two-wheels motion ===========================================================
@@ -450,16 +467,17 @@ double StateValidChecker::MotionCostLength(Matrix Q) const {
 
 double StateValidChecker::MotionCostCamera(Matrix Q) const {
 
-	int C = 0;
+	double C = 0;
 	for (int i = 1; i < Q.size(); i++) {
 		//cout << Q[i][0] << " " << Q[i][1] << " " << Q[i][2] << endl;
-		//cout << countVisible(Q[i][0], Q[i][1], Q[i][2]) << endl;
-		//cin.ignore();
+
 		int c = countVisible(Q[i][0], Q[i][1], Q[i][2]);
-		C += c < 10 ? 1e-4 : c;
+		C += c < 10 ? 1./1e-4 : 1./(double)c;
+		//cout << c << " " << C << " " << 1./c << endl;
+		//cin.ignore();
 	}
-	cout << C << " " << 1./(double)C << endl;
-	return 1./(double)C;
+	//cout << C << "\n ";// << 1./(double)C << endl;
+	return C;
 }
 
 double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2, const int cost_type) const {
@@ -495,6 +513,8 @@ double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2, c
 	case 1:
 		return MotionCostLength(Q);
 	case 2:
+		//double C = MotionCostCamera(Q);
+		//cout << "C: " << C << endl;
 		return MotionCostCamera(Q);
 	}
 }

@@ -17,6 +17,8 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+#define THRES 4
+
 using namespace std;
 
 class camera

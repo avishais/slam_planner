@@ -54,8 +54,6 @@ public:
     {
     	return motionCost(s1, s2);
     }
-
-    int thereshold = 5;
 };
 
 
@@ -85,8 +83,6 @@ public:
     {
     	return motionCost(s1, s2);
     }
-
-    int thereshold = 5;
 };
 
 

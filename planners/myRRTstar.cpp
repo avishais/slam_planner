@@ -259,7 +259,12 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
     printStateVector(startMotions_[0]->state);
     printStateVector(rstate);
 
-    cout << opt_->motionCost(startMotions_[0]->state, rstate) << endl;
+    double c = MotionCost(startMotions_[0]->state, rstate, 2);
+    cout << (1.0 / c) << " " << c << " " << MotionCost(startMotions_[0]->state, rstate)  << endl;
+
+    Matrix M;
+    reconstructMotionTW(startMotions_[0]->state, rstate, M);
+    log_path_file(M);
     exit(1);*/
 
     // ========
@@ -306,6 +311,8 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             motion->parent = nmotion;
             motion->incCost = opt_->motionCost(nmotion->state, motion->state);
             motion->cost = opt_->combineCosts(nmotion->cost, motion->incCost);
+
+            //cout << "cost stam: " << motion->cost << " " << motion->incCost << endl;
 
             // Find nearby neighbors of the new motion
             getNeighbors(motion, nbh);
@@ -474,13 +481,24 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             double distanceFromGoal;
             if (goal->isSatisfied(motion->state, &distanceFromGoal))
             {
+            	cout << " <===== "; printStateVector(motion->state);
                 goalMotions_.push_back(motion);
                 checkForSolution = true;
+            }
+
+            if (goalMotions_.size() > 0) {
+            	cout << "===============================\n";
+            	for (int ijk = 0; ijk < goalMotions_.size(); ijk++)
+            		printStateVector(goalMotions_[ijk]->state);
             }
 
             // Checking for solution or iterative improvement
             if (checkForSolution)
             {
+            	//printStateVector(motion->state);
+            	//cout << "cost goal: " << motion->cost << endl;
+            	//cout << "dist goal: " << distanceFromGoal << endl;
+
                 bool updatedSolution = false;
                 for (size_t i = 0; i < goalMotions_.size(); ++i)
                 {
@@ -1092,6 +1110,7 @@ void ompl::geometric::RRTstar::calculateRewiringLowerBounds()
     r_rrg_ = rewireFactor_ * 2.0 * std::pow((1.0 + 1.0/dimDbl) * (prunedMeasure_ / unitNBallMeasure(si_->getStateDimension())), 1.0 / dimDbl);
 }
 
+// For debugging
 void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
 
 	Vector q(3);

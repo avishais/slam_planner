@@ -57,6 +57,13 @@ class plan_slam
 public:
 	plan_slam() {};
 
+	/** Main planning class:
+	 * For RRT planner, run: plan(<start std::vector<double>>, <goal std::vector<double>>, <maximum allowed runtime>)
+	 * For RRT*, run: plan(<start std::vector<double>>, <goal std::vector<double>>, <maximum allowed runtime>, PLANNER_RRT, <optimizaer>)
+	 * where <optimizer> can be:
+	 * OBJECTIVE_PATHLENGTH - minimum path length
+	 * OBJECTIVE_MINE - maximum features seen by camera in path
+	 * OBJECTIVE_WEIGHT - multi-objective cost function based on the above two */
 	bool plan(Vector, Vector, double, plannerType = PLANNER_RRT, planningObjective = OBJECTIVE_PATHLENGTH);
 
 	// Construct the planner specified by our command line argument.

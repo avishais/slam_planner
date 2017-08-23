@@ -14,7 +14,7 @@ camera::camera(){
     max_dist = 3;
     min_dist = 0.1;
 
-    feature_threshold = 5;
+    feature_threshold = THRES;
 
 }
 
@@ -33,7 +33,7 @@ camera::camera(std::string map_file, std::string upper_bound_file, std::string l
     max_dist = 3;
     min_dist = 0.1;
 
-    feature_threshold = 5;
+    feature_threshold = THRES;
 
     //load files Map
     map_vec=read_text(map_file);

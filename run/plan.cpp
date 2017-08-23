@@ -252,7 +252,7 @@ int main(int argn, char ** args) {
 
 	Vector q_start = {0, 0, 3.14/4};
 	Vector q_goal = {5.584, -2.0431, -1.5707};
-	//Vector q_goal = {3.454, 0.2569, 0};
+	//Vector q_start = {3.554, 0.4569, 1.5};
 
 	plan_slam pl;
 
