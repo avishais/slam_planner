@@ -60,7 +60,7 @@ ompl::geometric::RRTstar::RRTstar(const base::SpaceInformationPtr &si) :
     r_rrg_(0.0),
     delayCC_(true),
     lastGoalMotion_(nullptr),
-    useTreePruning_(false),
+    useTreePruning_(true),
     pruneThreshold_(0.05),
     usePrunedMeasure_(false),
     useInformedSampling_(false),
@@ -267,6 +267,8 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
     while (ptc == false)
     {
         iterations_++;
+
+        //cout << bestCost_.value() << endl;
 
         // sample random state (with goal biasing)
         // Goal samples are only sampled until maxSampleCount() goals are in the tree, to prohibit duplicate goal states.
@@ -1094,20 +1096,31 @@ void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
 
 	Vector q(3);
 
-	double cost2go = 0;
+	double cost2go_cam = 0, cost2go_len = 0;
 	for (int i = mpath.size()-1 ; i >= 0; i--) {
 		cout << " ------- " << i << endl;
 		printStateVector(mpath[i]->state);
 		cout << mpath[i]->cost << " " << mpath[i]->incCost << endl;
 
-		retrieveStateVector(mpath[i]->state, q);
+		if (i < mpath.size()-1) {
+			double c = MotionCost(mpath[i]->state, mpath[i+1]->state);
+			cout << "motion cost length: " << c << endl;
+			cost2go_len += c;
+
+			double costC = MotionCost(mpath[i+1]->state, mpath[i]->state, 2);
+			cout << "motion cost camera: " << costC << endl;
+			cost2go_cam += (double)costC;
+		}
+
+		/*retrieveStateVector(mpath[i]->state, q);
 		int nv = countVisible(q[0], q[1], q[2]);
-		double cost =  (i==mpath.size()-1 || i==0) ? 0 : 1/(nv < 10 ? 1e-5 : (double)nv);
+		double cost =  (double)nv;//(i==mpath.size()-1 || i==0) ? 0 : 1/(nv < 10 ? 1e-5 : (double)nv);
 		cout << "n_visible: " << nv << ", state cost: " << cost << ", opt_state_cost: " << opt_->stateCost(mpath[i]->state) << endl;
-		cost2go += cost;
+		cost2go_cam += cost;*/
 	}
 
-	cout << "Cost2go: " << cost2go << endl;
+	cout << "\nCost2go camera: " << cost2go_cam << endl;
+	cout << "Cost2go length: " << cost2go_len << endl << endl;
 }
 
 void ompl::geometric::RRTstar::save2file(vector<Motion*> mpath) {

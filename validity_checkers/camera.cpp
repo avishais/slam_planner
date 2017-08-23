@@ -14,6 +14,8 @@ camera::camera(){
     max_dist = 3;
     min_dist = 0.1;
 
+    feature_threshold = 5;
+
 }
 
 camera::camera(std::string map_file, std::string upper_bound_file, std::string lower_bound_file)
@@ -30,6 +32,8 @@ camera::camera(std::string map_file, std::string upper_bound_file, std::string l
     MinY = 10;
     max_dist = 3;
     min_dist = 0.1;
+
+    feature_threshold = 5;
 
     //load files Map
     map_vec=read_text(map_file);
@@ -79,6 +83,11 @@ int camera::countVisible(float x_w, float y_w, float theta_rad_w) const {
         std::cout<<"Cannot get current robot pose"<<std::endl;
     } 
     return num_visible;
+}
+
+bool camera::IsStateVisiblilty(float x_w, float y_w, float theta_rad_w) {
+
+	return countVisible(x_w, y_w, theta_rad_w) > feature_threshold;
 }
 
 

@@ -38,6 +38,8 @@ public:
 
     int countVisible(float x_w, float y_w, float theta_rad_w) const;
 
+    bool IsStateVisiblilty(float x_w, float y_w, float theta_rad_w);
+
 private:
 
     //cv::Mat_<float> vec2cvMat_2D(std::vector< std::vector<float> > &inVec);
@@ -69,6 +71,8 @@ private:
     Eigen::Matrix4f T_sw;
     Eigen::Matrix4f T_bc;
     Eigen::Matrix4f T_sb; 
+
+    int feature_threshold;
 
 };
 

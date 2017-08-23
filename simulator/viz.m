@@ -7,6 +7,7 @@ Q = load('../paths/path.txt');
 Qms = load('../paths/path_milestones.txt');
 
 load('../data/data.mat');
+load('../data/vis_config.mat');
 
 %%
 
@@ -28,24 +29,28 @@ for i = 1:1:size(Q,1)
     %f = viscircles(obs(:,1:2),obs(:,3),'color','black');
     plot(obs(:,1),obs(:,2),'.k');
     
-    plot(Q(:,1),Q(:,2),'.-k');
-    plot(Qms(:,1),Qms(:,2),'or');
+    plot3(vis_config(idx,1),vis_config(idx,2),vis_config(idx,3),'.r');
     
-    plot(Qms(1,1),Qms(1,2), 'or','markerfacecolor','r');
-    plot(Qms(end,1),Qms(end,2), 'og','markerfacecolor','g');
+    plot3(Q(:,1),Q(:,2),Q(:,3),'.-k');
+    plot3(Qms(:,1),Qms(:,2),Qms(:,3),'or');
+    plot3(Qms(1,1),Qms(1,2),Qms(1,3), 'or','markerfacecolor','r');
+    plot3(Qms(end,1),Qms(end,2),Qms(end,3), 'og','markerfacecolor','g');
+    
+%     plot(Q(:,1),Q(:,2),'.-k');
+%     plot(Qms(:,1),Qms(:,2),'or');
+%     plot(Qms(1,1),Qms(1,2), 'or','markerfacecolor','r');
+%     plot(Qms(end,1),Qms(end,2), 'og','markerfacecolor','g');
     
     UGV(Q(i,:)');
     
     % Compute number of features cost
-    [n_visible,idx]=isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,Norm_corner,kinect,Obs_corner,std_corner,Mean_corner);
-    plot(Corner_w(1,idx),Corner_w(2,idx),'*r');
+    [n_visible, idex] = isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,kinect, upper_bound,lower_bound );
+    plot(Corner_w(1,idex),Corner_w(2,idex),'*r');
+    %disp(Q(i,:));
     disp(n_visible);
-    if n_visible < 10 
-        C = 1e-5;
-    else
-        C = n_visible;
+    if (i>1 && i<size(Q,1))
+        cost = cost + 1/n_visible;
     end
-    cost = cost + 1/C;
     
     % Compute length of path
     if i > 1
@@ -54,6 +59,8 @@ for i = 1:1:size(Q,1)
     
     hold off
     axis([min(obs(:,1)) max(obs(:,1)) min(obs(:,2)) max(obs(:,2))]);
+    grid on
+    view(2)
     drawnow;
     
     if vid

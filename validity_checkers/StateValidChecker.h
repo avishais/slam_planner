@@ -86,8 +86,9 @@ public:
 		return n;
 	}
 
-	double MotionCost(Matrix) const;
-	double MotionCost(const ob::State *, const ob::State *) const;
+	double MotionCostLength(Matrix) const;
+	double MotionCostCamera(Matrix) const;
+	double MotionCost(const ob::State *, const ob::State *, const int = 1) const;
 
 private:
 	ob::StateSpace *stateSpace_;

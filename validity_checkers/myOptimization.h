@@ -73,26 +73,18 @@ public:
 
     ob::Cost stateCost(const ob::State* s) const
     {
-
-    	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
-    	int C = countVisible((float)Q->values[0], (float)Q->values[1], (float)Q->values[2]);
-
-    	double cost = C < thereshold ? 1e-5 : (double)C;
-
-    	//cout << (float)Q->values[0] << " " << (float)Q->values[1] << " " << (float)Q->values[2] << endl;
-
-    	return ob::Cost(1 / cost);
+    	return identityCost();
     }
 
-    /*ob::Cost motionCost(const State *s1, const State *s2) const
+    ob::Cost motionCost(const State *s1, const State *s2) const
     {
-    	return ob::Cost(MotionCost(s1, s2));
+    	return ob::Cost(MotionCost(s1, s2, 2));
     }
 
     ob::Cost motionCostHeuristic(const State *s1, const State *s2) const
     {
     	return motionCost(s1, s2);
-    }*/
+    }
 
     int thereshold = 5;
 };

@@ -20,6 +20,6 @@ kinect.maxX = 940;
 kinect.minX = 20;
 kinect.maxY = 530;
 kinect.minY = 10;
-kinect.max_dist = 5;
+kinect.max_dist = 3;
 kinect.min_dist = 0.1;
 kinect.min_normal_difference = 0.5;

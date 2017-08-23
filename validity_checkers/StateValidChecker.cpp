@@ -59,9 +59,10 @@ bool StateValidChecker::isValid(const ob::State *state) {
 
 bool StateValidChecker::isValid(Vector q) {
 
-	// More constraints to be added here
+	bool col = check_collisions(q, robot_r);
+	bool cam = IsStateVisiblilty(q[0], q[1], q[2]);
 
-	return check_collisions(q, robot_r);
+	return col && cam;
 }
 
 bool StateValidChecker::checkMotion(const ob::State *s1, const ob::State *s2)
@@ -438,7 +439,7 @@ double StateValidChecker::twb_getangle(Vector q1, Vector q2) const {
 
 // ============================== Optimization functions ===================================
 
-double StateValidChecker::MotionCost(Matrix Q) const {
+double StateValidChecker::MotionCostLength(Matrix Q) const {
 
 	double C = 0;
 	for (int i = 1; i < Q.size(); i++)
@@ -447,7 +448,22 @@ double StateValidChecker::MotionCost(Matrix Q) const {
 	return C;
 }
 
-double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) const {
+double StateValidChecker::MotionCostCamera(Matrix Q) const {
+
+	int C = 0;
+	for (int i = 1; i < Q.size(); i++) {
+		//cout << Q[i][0] << " " << Q[i][1] << " " << Q[i][2] << endl;
+		//cout << countVisible(Q[i][0], Q[i][1], Q[i][2]) << endl;
+		//cin.ignore();
+		int c = countVisible(Q[i][0], Q[i][1], Q[i][2]);
+		C += c < 10 ? 1e-4 : c;
+	}
+	cout << C << " " << 1./(double)C << endl;
+	return 1./(double)C;
+}
+
+double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2, const int cost_type) const {
+	// cost_type: 1 - motion length, 2 - number of visible features
 
 	Vector q1(n), q2(n), q(n);
 
@@ -475,7 +491,12 @@ double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) c
 			Q.push_back(myprop(q, vwt.v[i], vwt.w[i], j*dd));
 	}
 
-	return MotionCost(Q);
+	switch (cost_type) {
+	case 1:
+		return MotionCostLength(Q);
+	case 2:
+		return MotionCostCamera(Q);
+	}
 }
 
 

@@ -1,4 +1,4 @@
-function [n_visible, idx_visible] = isInFrustum_pts(x_w, y_w, theta_w, pts_s, normal_s, cam_parameter,num_obs,std,mu)
+function [n_visible, idx_visible] = isInFrustum_pts(x_w, y_w, theta_w, pts_s, cam_parameter,upper_bound,lower_bound)
 % check if a set of points is in camera's frustum
 % coordinate frames:
 % w: world frame, [origin:starting point, x: forward, y: left, z: up], the ros frame
@@ -25,7 +25,7 @@ function [n_visible, idx_visible] = isInFrustum_pts(x_w, y_w, theta_w, pts_s, no
 %               -min_dist: minimum visible distance
 %               -min_normal_difference: minimum difference in normal
 %               direction
-
+%tic
 t_wb = [x_w; y_w; 0];
 R_wb = eul2rotm([theta_w,0,0]);
 T_wb = [R_wb, t_wb; zeros(1,3),1];
@@ -83,12 +83,13 @@ theta_s=atan2(dir_s(1,:),dir_s(3,:));
 
 %idx_dir = (dir_s'*normal_s(:,idx_visible) > cam_parameter.min_normal_difference);
 
-%t_value=tinv(0.999,num_obs-1);
-%lower_bound=mu(idx_visible)-t_value(idx_visible).*std(idx_visible)./sqrt(num_obs(idx_visible));
-%upper_bound=mu(idx_visible)+t_value(idx_visible).*std(idx_visible)./sqrt(num_obs(idx_visible));
+%{
+t_value=tinv(0.975,num_obs-1);
+lower_bound=mu(idx_visible)-t_value(idx_visible).*std(idx_visible)./sqrt(num_obs(idx_visible));
+upper_bound=mu(idx_visible)+t_value(idx_visible).*std(idx_visible)./sqrt(num_obs(idx_visible));
 
-lower_bound = mu(idx_visible) - 3*std(idx_visible);
-upper_bound = mu(idx_visible) + 3*std(idx_visible);
+%lower_bound = mu(idx_visible) - 3*std(idx_visible);
+%upper_bound = mu(idx_visible) + 3*std(idx_visible);
 
 diff=upper_bound-lower_bound;
 [~,loc]=find(diff<deg2rad(30));
@@ -96,6 +97,11 @@ mean_vis=mu(idx_visible);
 lower_bound(loc)=mean_vis(loc)-deg2rad(15);
 upper_bound(loc)=mean_vis(loc)+deg2rad(15);
 % diff=upper_bound-lower_bound
+%}
+
+upper_bound=upper_bound(idx_visible);
+lower_bound=lower_bound(idx_visible);
+
 
 idx_dir=(theta_s>lower_bound & theta_s<upper_bound);
 
@@ -103,6 +109,7 @@ idx_visible = idx_visible(idx_dir);
 
 
 
-n_visible = length(idx_visible);
+n_visible = numel(idx_visible);
+%toc
 
 end
