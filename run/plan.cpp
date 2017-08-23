@@ -68,7 +68,7 @@ ob::OptimizationObjectivePtr plan_slam::getPathLengthObjective(const ob::SpaceIn
 
     OMPL_INFORM("Loading path length optimization objective.");
 
-    return ob::OptimizationObjectivePtr(new ob::PathLengthOptimizationObjective(si));
+    return ob::OptimizationObjectivePtr(new LengthObjective(si));
 }
 
 /** Return an optimization objective which attempts to minimiaze turn angle. */
@@ -76,7 +76,7 @@ ob::OptimizationObjectivePtr plan_slam::getMyObjective(const ob::SpaceInformatio
 {
     OMPL_INFORM("Loading custom optimization objective.");
 
-    return ob::OptimizationObjectivePtr(new myObjective(si));
+    return ob::OptimizationObjectivePtr(new CameraObjective(si));
 }
 
 /** Create an optimization objective equivalent to the one returned by
@@ -85,8 +85,8 @@ ob::OptimizationObjectivePtr plan_slam::getWeightedObjective(const ob::SpaceInfo
 {
     OMPL_INFORM("Loading multi-objective optimization.");
 
-    ob::OptimizationObjectivePtr lengthObj(new ob::PathLengthOptimizationObjective(si));
-    ob::OptimizationObjectivePtr customObj(new myObjective(si));
+    ob::OptimizationObjectivePtr lengthObj(new LengthObjective(si));
+    ob::OptimizationObjectivePtr customObj(new CameraObjective(si));
 
     return 1.0*lengthObj + customObj;
 }

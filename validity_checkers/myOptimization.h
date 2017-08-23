@@ -28,6 +28,37 @@
 namespace ob = ompl::base;
 using namespace ob;
 
+/** Defines an optimization objective which attempts to minimize the length of the path in the R^2 X S configuration space
+ *
+    The class StateCostIntegralObjective represents objectives as
+    summations of state costs, just like we require. All we need to do
+    then is inherit from that base class and define our specific state
+    cost function by overriding the stateCost() method.
+ */
+class LengthObjective : public ob::StateCostIntegralObjective, public StateValidChecker
+{
+public:
+	LengthObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true), StateValidChecker(si) {cout << "Init custom objective function.\n";}
+
+    ob::Cost stateCost(const ob::State* s) const
+    {
+      	return identityCost();
+    }
+
+    ob::Cost motionCost(const State *s1, const State *s2) const
+    {
+    	return ob::Cost(MotionCost(s1, s2));
+    }
+
+    ob::Cost motionCostHeuristic(const State *s1, const State *s2) const
+    {
+    	return motionCost(s1, s2);
+    }
+
+    int thereshold = 5;
+};
+
+
 /** Defines an optimization objective which attempts to maximize the features seen by the camera
  *
     The class StateCostIntegralObjective represents objectives as
@@ -35,52 +66,33 @@ using namespace ob;
     then is inherit from that base class and define our specific state
     cost function by overriding the stateCost() method.
  */
-class myObjective : public ob::StateCostIntegralObjective, public StateValidChecker
+class CameraObjective : public ob::StateCostIntegralObjective, public StateValidChecker
 {
 public:
-    myObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true), StateValidChecker(si) {cout << "Init custom objective function.\n";}
+	CameraObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true), StateValidChecker(si) {cout << "Init custom objective function.\n";}
 
     ob::Cost stateCost(const ob::State* s) const
     {
-    	/*//cout << "--------\n";
 
     	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
-    	//double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
-    	//double C = 1. / fabs(Q->values[1]-(-0.5));
     	int C = countVisible((float)Q->values[0], (float)Q->values[1], (float)Q->values[2]);
 
     	double cost = C < thereshold ? 1e-5 : (double)C;
 
-    	cout << (float)Q->values[0] << " " << (float)Q->values[1] << " " << (float)Q->values[2] << endl;
-    	//cout << C << " " << 1/cost << endl;
+    	//cout << (float)Q->values[0] << " " << (float)Q->values[1] << " " << (float)Q->values[2] << endl;
 
-    	return ob::Cost(1 / cost);*/
-
-    	return identityCost();
+    	return ob::Cost(1 / cost);
     }
 
-    ob::Cost motionCost(const State *s1, const State *s2) const
+    /*ob::Cost motionCost(const State *s1, const State *s2) const
     {
-    	/*const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
-        	//double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
-        	//double C = 1. / fabs(Q->values[1]-(-0.5));
-        	int C = countVisible((float)Q->values[0], (float)Q->values[1], (float)Q->values[2]);
-
-        	double cost = C < thereshold ? 1e-5 : (double)C;
-
-        	cout << (float)Q->values[0] << " " << (float)Q->values[1] << " " << (float)Q->values[2] << endl;
-        	//cout << C << " " << 1/cost << endl;
-
-        	return ob::Cost(1 / cost);*/
-
-    	return ob::Cost(1);
-
+    	return ob::Cost(MotionCost(s1, s2));
     }
 
     ob::Cost motionCostHeuristic(const State *s1, const State *s2) const
     {
     	return motionCost(s1, s2);
-    }
+    }*/
 
     int thereshold = 5;
 };

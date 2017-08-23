@@ -86,8 +86,8 @@ public:
 		return n;
 	}
 
-	double MotionCost(Matrix);
-	double MotionCost(const ob::State *, const ob::State *);
+	double MotionCost(Matrix) const;
+	double MotionCost(const ob::State *, const ob::State *) const;
 
 private:
 	ob::StateSpace *stateSpace_;
@@ -97,10 +97,6 @@ private:
 	double robot_r = 0.3; // Robot radius
 	double turn_radius = 0.25;
 	double dt = 0.2; // Interval in which to interpolate the motion
-
-	/** Shortest path parameters */
-	Vector d1mid2; // {d1cur, dmidcur, d2cur}
-
 };
 
 

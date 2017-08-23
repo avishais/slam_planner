@@ -438,7 +438,7 @@ double StateValidChecker::twb_getangle(Vector q1, Vector q2) const {
 
 // ============================== Optimization functions ===================================
 
-double StateValidChecker::MotionCost(Matrix Q) {
+double StateValidChecker::MotionCost(Matrix Q) const {
 
 	double C = 0;
 	for (int i = 1; i < Q.size(); i++)
@@ -446,8 +446,8 @@ double StateValidChecker::MotionCost(Matrix Q) {
 
 	return C;
 }
-/*
-double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) {
+
+double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) const {
 
 	Vector q1(n), q2(n), q(n);
 
@@ -462,24 +462,21 @@ double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) {
 		q2[i] = Q2->values[i];
 	}
 
-	Matrix M = {{1,1,1},{-4,0,-4},{1,1,1}};//GetShortestPath(q1, q2);
-	v = {(int)M[0][0], (int)M[0][1], (int)M[0][2]};
-	w = M[1];
-	t = M[2];
+	TW_path_data vwt = GetShortestPath(q1, q2);
 
 	Matrix Q;
 	Q.push_back(q1);
 
-	for (int i = 0; i < v.size(); i++) {
-		int m = 1+ceil(t[i]/dt); // dt + j*dt ?
-		double dd = t[i] / (m-1);
+	for (int i = 0; i < vwt.v.size(); i++) {
+		int m = 1+ceil(vwt.t[i]/dt); // dt + j*dt ?
+		double dd = vwt.t[i] / (m-1);
 		q = Q.back();
 		for (int j = 1; j < m; j++) // starts from 1 because the first point was already inserted to Q
-			Q.push_back(myprop(q, v[i], w[i], j*dd));
+			Q.push_back(myprop(q, vwt.v[i], vwt.w[i], j*dd));
 	}
 
 	return MotionCost(Q);
-}*/
+}
 
 
 

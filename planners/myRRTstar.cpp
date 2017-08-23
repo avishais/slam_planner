@@ -1102,8 +1102,8 @@ void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
 
 		retrieveStateVector(mpath[i]->state, q);
 		int nv = countVisible(q[0], q[1], q[2]);
-		double cost =  1/(nv < 10 ? 1e-5 : (double)nv);
-		cout << "n_visible: " << nv << ", state cost: " << cost << endl;
+		double cost =  (i==mpath.size()-1 || i==0) ? 0 : 1/(nv < 10 ? 1e-5 : (double)nv);
+		cout << "n_visible: " << nv << ", state cost: " << cost << ", opt_state_cost: " << opt_->stateCost(mpath[i]->state) << endl;
 		cost2go += cost;
 	}
 
@@ -1152,11 +1152,8 @@ void ompl::geometric::RRTstar::save2file(vector<Motion*> mpath) {
 
 			Matrix M;
 			bool valid = reconstructMotionTW(path[i-1]->state, path[i]->state, M);
-			bool validC = checkMotionTW(path[i-1]->state, path[i]->state);
-
 
 			if (!valid) {
-				cout << validC << endl;
 				cout << "Error in reconstructing...\n";
 				return;
 			}

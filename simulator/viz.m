@@ -18,6 +18,7 @@ if vid
 end
 
 cost = 0;
+Cost_length = 0;
 for i = 1:1:size(Q,1)
     
     figure(1)
@@ -35,6 +36,7 @@ for i = 1:1:size(Q,1)
     
     UGV(Q(i,:)');
     
+    % Compute number of features cost
     [n_visible,idx]=isInFrustum_pts(Q(i,1),Q(i,2),Q(i,3),Corner_s,Norm_corner,kinect,Obs_corner,std_corner,Mean_corner);
     plot(Corner_w(1,idx),Corner_w(2,idx),'*r');
     disp(n_visible);
@@ -44,6 +46,11 @@ for i = 1:1:size(Q,1)
         C = n_visible;
     end
     cost = cost + 1/C;
+    
+    % Compute length of path
+    if i > 1
+        Cost_length = Cost_length + norm(Q(i,:)-Q(i-1,:));
+    end
     
     hold off
     axis([min(obs(:,1)) max(obs(:,1)) min(obs(:,2)) max(obs(:,2))]);
@@ -59,6 +66,7 @@ for i = 1:1:size(Q,1)
 end
 
 disp(['Cost of path: ' num2str(cost)]);
+disp(['Cost length: ' num2str(Cost_length)]);
 
 if vid
     close(writerObj);
