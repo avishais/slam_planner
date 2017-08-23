@@ -41,7 +41,7 @@
 
 #include "myRRT.h"
 
-ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si) : base::Planner(si, "RRT"), StateValidityChecker(si)
+ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si) : base::Planner(si, "RRT"), StateValidChecker(si)
 {
     specs_.approximateSolutions = true;
     specs_.directed = true;
@@ -99,6 +99,22 @@ void ompl::geometric::RRT::freeMemory()
 
 ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTerminationCondition &ptc)
 {
+
+	/*Vector q1 = {0.2, -0.1, 0.5};
+	Vector q2 = {0.961094811725775,-0.276218686684658,-1.880581031756361};
+
+	base::State *s1 = si_->allocState();
+	updateStateVector(s1, q1);
+	base::State *s2 = si_->allocState();
+	updateStateVector(s2, q2);
+
+	Matrix Q;
+	reconstructMotionTW(s1, s2, Q);
+
+	printMatrix(Q);
+
+	exit(1);*/
+
 	Vector q(n);
 
     checkValidity();

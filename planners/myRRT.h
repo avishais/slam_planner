@@ -40,7 +40,7 @@
 #include "ompl/geometric/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighbors.h"
 
-#include "../validity_checkers/StateValidityChecker.h"
+#include "../validity_checkers/StateValidChecker.h"
 
 namespace ompl
 {
@@ -64,7 +64,7 @@ namespace ompl
         */
 
         /** \brief Rapidly-exploring Random Trees */
-        class RRT : public base::Planner, StateValidityChecker
+        class RRT : public base::Planner, StateValidChecker
         {
         public:
 

@@ -41,7 +41,7 @@
 #include "ompl/base/OptimizationObjective.h"
 #include "ompl/datastructures/NearestNeighbors.h"
 
-#include "../validity_checkers/StateValidityChecker.h"
+#include "../validity_checkers/StateValidChecker.h"
 
 #include <limits>
 #include <vector>
@@ -78,7 +78,7 @@ namespace ompl
         */
 
         /** \brief Optimal Rapidly-exploring Random Trees */
-        class RRTstar : public base::Planner, StateValidityChecker
+        class RRTstar : public base::Planner, StateValidChecker
         {
         public:
 

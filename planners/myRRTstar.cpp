@@ -72,7 +72,7 @@ ompl::geometric::RRTstar::RRTstar(const base::SpaceInformationPtr &si) :
     prunedCost_(std::numeric_limits<double>::quiet_NaN()),
     prunedMeasure_(0.0),
     iterations_(0u),
-	StateValidityChecker(si)
+	StateValidChecker(si)
 {
 
     defaultSettings(); // Avishai
@@ -255,12 +255,12 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
     CostIndexCompare compareFn(costs, *opt_);
 
     // ========
-    goal_s->sampleGoal(rstate);
+    /*goal_s->sampleGoal(rstate);
     printStateVector(startMotions_[0]->state);
     printStateVector(rstate);
 
     cout << opt_->motionCost(startMotions_[0]->state, rstate) << endl;
-    exit(1);
+    exit(1);*/
 
     // ========
 

@@ -25,6 +25,9 @@
 #include <sstream>
 #include <stdlib.h>
 
+// Optimization classes
+#include "../validity_checkers/myOptimization.h"
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 using namespace std;
@@ -46,38 +49,6 @@ enum planningObjective
     OBJECTIVE_PATHLENGTH,
 	OBJECTIVE_MINE,
 	OBJECTIVE_WEIGHT
-};
-
-/** Defines an optimization objective which attempts to maximize the features seen by the camera
- *
-    The class StateCostIntegralObjective represents objectives as
-    summations of state costs, just like we require. All we need to do
-    then is inherit from that base class and define our specific state
-    cost function by overriding the stateCost() method.
- */
-class myObjective : public ob::StateCostIntegralObjective, StateValidityChecker
-{
-public:
-    myObjective(const ob::SpaceInformationPtr& si) : ob::StateCostIntegralObjective(si, true), StateValidityChecker(si) {cout << "Init custom objective function.\n";}
-
-    ob::Cost stateCost(const ob::State* s) const
-    {
-    	//cout << "--------\n";
-
-    	const ob::RealVectorStateSpace::StateType *Q = s->as<ob::RealVectorStateSpace::StateType>();
-    	//double C = Q->values[0]*Q->values[0] + Q->values[1]*Q->values[1];
-    	//double C = 1. / fabs(Q->values[1]-(-0.5));
-    	int C = countVisible((float)Q->values[0], (float)Q->values[1], (float)Q->values[2]);
-
-    	double cost = C < thereshold ? 1e-5 : (double)C;
-
-    	cout << (float)Q->values[0] << " " << (float)Q->values[1] << " " << (float)Q->values[2] << endl;
-    	//cout << C << " " << 1/cost << endl;
-
-    	return ob::Cost(1 / cost);
-    }
-
-    int thereshold = 5;
 };
 
 // Prototypes

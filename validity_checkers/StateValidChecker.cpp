@@ -5,10 +5,10 @@
  *      Author: avishai
  */
 
-#include "StateValidityChecker.h"
+#include "StateValidChecker.h"
 #include <queue>
 
-void StateValidityChecker::defaultSettings()
+void StateValidChecker::defaultSettings()
 {
 	stateSpace_ = mysi_->getStateSpace().get();
 	if (!stateSpace_)
@@ -17,7 +17,7 @@ void StateValidityChecker::defaultSettings()
 
 // ==========================================================================================================
 
-void StateValidityChecker::retrieveStateVector(const ob::State *state, Vector &q) {
+void StateValidChecker::retrieveStateVector(const ob::State *state, Vector &q) {
 	// cast the abstract state type to the type we expect
 	const ob::RealVectorStateSpace::StateType *Q = state->as<ob::RealVectorStateSpace::StateType>();
 
@@ -27,7 +27,7 @@ void StateValidityChecker::retrieveStateVector(const ob::State *state, Vector &q
 	}
 }
 
-void StateValidityChecker::updateStateVector(const ob::State *state, Vector q) {
+void StateValidChecker::updateStateVector(const ob::State *state, Vector q) {
 	// cast the abstract state type to the type we expect
 	const ob::RealVectorStateSpace::StateType *Q = state->as<ob::RealVectorStateSpace::StateType>();
 
@@ -36,7 +36,7 @@ void StateValidityChecker::updateStateVector(const ob::State *state, Vector q) {
 	}
 }
 
-void StateValidityChecker::printStateVector(const ob::State *state) {
+void StateValidChecker::printStateVector(const ob::State *state) {
 	// cast the abstract state type to the type we expect
 	const ob::RealVectorStateSpace::StateType *Q = state->as<ob::RealVectorStateSpace::StateType>();
 
@@ -50,21 +50,21 @@ void StateValidityChecker::printStateVector(const ob::State *state) {
 
 // ==========================================================================================================
 
-bool StateValidityChecker::isValid(const ob::State *state) {
+bool StateValidChecker::isValid(const ob::State *state) {
 	Vector q(n);
 	retrieveStateVector(state, q);
 
 	return isValid(q);
 }
 
-bool StateValidityChecker::isValid(Vector q) {
+bool StateValidChecker::isValid(Vector q) {
 
 	// More constraints to be added here
 
 	return check_collisions(q, robot_r);
 }
 
-bool StateValidityChecker::checkMotion(const ob::State *s1, const ob::State *s2)
+bool StateValidChecker::checkMotion(const ob::State *s1, const ob::State *s2)
 {
 	bool result = true;
 	int nd = stateSpace_->validSegmentCount(s1, s2);
@@ -108,7 +108,7 @@ bool StateValidityChecker::checkMotion(const ob::State *s1, const ob::State *s2)
 
 // ========================== Reconstruct ===========================================================
 
-bool StateValidityChecker::reconstructMotion(const ob::State *s1, const ob::State *s2, Matrix &M) {
+bool StateValidChecker::reconstructMotion(const ob::State *s1, const ob::State *s2, Matrix &M) {
 
 	int nd = stateSpace_->validSegmentCount(s1, s2);
 
@@ -132,7 +132,7 @@ bool StateValidityChecker::reconstructMotion(const ob::State *s1, const ob::Stat
 // ========================== Misc ==================================================================
 
 template <class T>
-void StateValidityChecker::printVector(T q) {
+void StateValidChecker::printVector(T q) {
 
 	cout << "[";
 	for (int i = 0; i < q.size(); i++)
@@ -140,7 +140,7 @@ void StateValidityChecker::printVector(T q) {
 	cout << "]" << endl;
 
 }
-void StateValidityChecker::printMatrix(Matrix M) {
+void StateValidChecker::printMatrix(Matrix M) {
 	for (unsigned i = 0; i < M.size(); i++) {
 		for (unsigned j = 0; j < M[i].size(); j++)
 			cout << M[i][j] << " ";
@@ -148,7 +148,7 @@ void StateValidityChecker::printMatrix(Matrix M) {
 	}
 }
 
-double StateValidityChecker::normDistance(Vector a1, Vector a2, int d) {
+double StateValidChecker::normDistance(Vector a1, Vector a2, int d) const {
 	if (d==-1)
 		d = a1.size();
 
@@ -160,62 +160,59 @@ double StateValidityChecker::normDistance(Vector a1, Vector a2, int d) {
 
 // ========================== Two-wheels motion ===========================================================
 
-bool StateValidityChecker::checkMotionTW(const ob::State *s1, const ob::State *s2, bool calc_cost) {
+bool StateValidChecker::checkMotionTW(const ob::State *s1, const ob::State *s2) {
 	// We assume that s1 is in the tree and therefore valid
 
 	Vector q1(n), q2(n), q(n), q_temp(n);
 	retrieveStateVector(s1, q1);
 	retrieveStateVector(s2, q2);
 
-	if (!GetShortestPath(q1, q2)) // Add move straight to goal if the goal is sampled?
+	TW_path_data vwt = GetShortestPath(q1, q2);
+	if (!vwt.valid) // Add move straight to goal if the goal is sampled?
 		return false;
 
 	Matrix Q;
 	Q.push_back(q1);
 
-	for (int i = 0; i < v.size(); i++) {
-		int m = 1+ceil(t[i]/dt); // dt + j*dt ?
-		double dd = t[i] / (m-1);
+	for (int i = 0; i < vwt.v.size(); i++) {
+		int m = 1+ceil(vwt.t[i]/dt); // dt + j*dt ?
+		double dd = vwt.t[i] / (m-1);
 		q = Q.back();
 		for (int j = 1; j < m; j++) { // starts from 1 because the first point was already inserted to Q
-			q_temp = myprop(q, v[i], w[i], j*dd);
+			q_temp = myprop(q, vwt.v[i], vwt.w[i], j*dd);
 			if (!isValid(q_temp))
 				return false;
 			Q.push_back(q_temp);
 		}
 	}
 
-	mCost = 0;
-	if (calc_cost) {
-		mCost =  motionCost(Q);
-	}
-
 	return true;
 }
 
-bool StateValidityChecker::reconstructMotionTW(const ob::State *s1, const ob::State *s2, Matrix &Q) {
+bool StateValidChecker::reconstructMotionTW(const ob::State *s1, const ob::State *s2, Matrix &Q) {
 
 	Vector q1(n), q2(n), q(n);
 	retrieveStateVector(s1, q1);
 	retrieveStateVector(s2, q2);
 
-	if (!GetShortestPath(q1, q2))
+	TW_path_data vwt = GetShortestPath(q1, q2);
+	if (!vwt.valid)
 		return false;
 
 	Q.push_back(q1);
 
-	for (int i = 0; i < v.size(); i++) {
-		int m = 1+ceil(t[i]/dt); // dt + j*dt ?
-		double dd = t[i] / (m-1);
+	for (int i = 0; i < vwt.v.size(); i++) {
+		int m = 1+ceil(vwt.t[i]/dt); // dt + j*dt ?
+		double dd = vwt.t[i] / (m-1);
 		q = Q.back();
 		for (int j = 1; j < m; j++) // starts from 1 because the first point was already inserted to Q
-			Q.push_back(myprop(q, v[i], w[i], j*dd));
+			Q.push_back(myprop(q, vwt.v[i], vwt.w[i], j*dd));
 	}
 
 	return true;
 }
 
-Vector StateValidityChecker::myprop(Vector q, double vi, double wi, double ti) {
+Vector StateValidChecker::myprop(Vector q, double vi, double wi, double ti) const {
 	double h = q[2] + wi * ti;
 	double x, y;
 
@@ -232,7 +229,7 @@ Vector StateValidityChecker::myprop(Vector q, double vi, double wi, double ti) {
 
 }
 
-bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
+TW_path_data StateValidChecker::GetShortestPath(Vector q1, Vector q2) const {
 
 	//   start and goal configurations:
 	//       q1 = [x;y;theta]
@@ -250,6 +247,8 @@ bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 	//
 	//   note that the total length of the shortest path is sum(t)
 
+	TW_path_data vwt;
+
 	double d1 = 1e9, dmid = 1e9, d2 = 1e9;
 	short s1, s2, dir;
 	bool sol = false;
@@ -257,12 +256,13 @@ bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 	for (int s1cur = -1; s1cur < 2; s1cur+=2)
 		for (int s2cur = -1; s2cur < 2; s2cur+=2) {
 			for (int dircur = -1; dircur < 2; dircur+=2) {
-				if (twb_shortpath(q1, s1cur, q2, s2cur, dircur)) {
-					if (d1mid2[0]+d1mid2[1]+d1mid2[2] < d1+dmid+d2) {
+				TW_tangent twt = twb_shortpath(q1, s1cur, q2, s2cur, dircur);
+				if (twt.valid) {
+					if (twt.d1mid2[0]+twt.d1mid2[1]+twt.d1mid2[2] < d1+dmid+d2) {
 						sol = true;
 
-						t = d1mid2;
-						d1 = t[0]; dmid = t[1]; d2 = t[2];
+						vwt.t = twt.d1mid2;
+						d1 = vwt.t[0]; dmid = vwt.t[1]; d2 = vwt.t[2];
 						s1 = s1cur;
 						s2 = s2cur;
 						dir = dircur;
@@ -271,16 +271,22 @@ bool StateValidityChecker::GetShortestPath(Vector q1, Vector q2) {
 			}
 		}
 
-	if (!sol)
-		return false;
+	if (!sol) {
+		vwt.valid = false;
+		return vwt;
+	}
 
-	v = {dir, dir, dir};
-	w = {s1*v[0]/turn_radius, 0, s2*v[2]/turn_radius};
+	//v = {dir, dir, dir};
+	//w = {s1*v[0]/turn_radius, 0, s2*v[2]/turn_radius};
 
-	return true;
+	vwt.valid = true;
+	vwt.v = {dir, dir, dir};
+	vwt.w = {s1*vwt.v[0]/turn_radius, 0, s2*vwt.v[2]/turn_radius};
+
+	return vwt;
 }
 
-bool StateValidityChecker::twb_shortpath(Vector q1, int s1, Vector q2, int s2, int dir) {
+TW_tangent StateValidChecker::twb_shortpath(Vector q1, int s1, Vector q2, int s2, int dir) const {
 
 	//   q1,q2 are initial and final points
 	//   s1,s2 are -1 for wheels to left, +1 for wheels to right
@@ -293,6 +299,9 @@ bool StateValidityChecker::twb_shortpath(Vector q1, int s1, Vector q2, int s2, i
 	//   NOTE: particular combinations of dir, s1, s2 are sometimes infeasible.
 	//   If this is the case, false is returned.
 
+	Vector qc1(2), qc2(2);
+	TW_tangent twt;
+
 	double h1 = q1[2];
 	double h2 = q2[2];
 	qc1[0] = q1[0] - turn_radius * s1 * sin(h1);
@@ -300,31 +309,34 @@ bool StateValidityChecker::twb_shortpath(Vector q1, int s1, Vector q2, int s2, i
 	qc2[0] = q2[0] - turn_radius * s2 * sin(h2);
 	qc2[1] = q2[1] + turn_radius * s2 * cos(h2);
 
-	if (s1*s2<0 && normDistance(qc1, qc2) < 2*turn_radius)
-		return false;
+	if (s1*s2<0 && normDistance(qc1, qc2) < 2*turn_radius) {
+		twt.valid = false;
+		return twt;
+	}
 
-	twb_gettangent(qc1, dir*s1, qc2, dir*s2);
+	twt = twb_gettangent(qc1, dir*s1, qc2, dir*s2);
 
-	double delta1 = twb_getangle(qc1,qt1) - twb_getangle(qc1,q1);
+	double delta1 = twb_getangle(qc1,twt.qt1) - twb_getangle(qc1,q1);
 	if ( dir*s1 > 0 && delta1 < 0 )
 		delta1 += 2*PI;
 	else if ( dir*s1 < 0 && delta1 > 0 )
 		delta1 -= 2*PI;
 
-	double delta2 = twb_getangle(qc2,q2)-twb_getangle(qc2,qt2);
+	double delta2 = twb_getangle(qc2,q2)-twb_getangle(qc2,twt.qt2);
 	if ( dir*s2 > 0 && delta2 < 0 )
 		delta2 += 2*PI;
 	else if ( dir*s2 < 0 && delta2 > 0 )
 		delta2 -= 2*PI;
 
-	d1mid2 = {fabs(turn_radius*delta1), normDistance(qt1, qt2, 2), fabs(turn_radius*delta2)};
-	qt1[2] = h1 + delta1;
-	qt2[2] = h2 - delta2;
+	twt.d1mid2 = {fabs(turn_radius*delta1), normDistance(twt.qt1, twt.qt2, 2), fabs(turn_radius*delta2)};
+	twt.qt1[2] = h1 + delta1;
+	twt.qt2[2] = h2 - delta2;
 
-	return true;
+	twt.valid = true;
+	return twt;
 }
 
-void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
+TW_tangent StateValidChecker::twb_gettangent(Vector q1, int s1, Vector q2, int s2) const {
 	// updates qt1 and qt2
 
 	// q1,q2 are the centers of two circles, both with radius r
@@ -333,6 +345,10 @@ void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 	//
 	// t1,t2 are the endpoints of a segment that is tangent to
 	//		both circles and that matches the orientations s1,s2
+
+	TW_tangent twt;
+	twt.qt1.resize(2);
+	twt.qt2.resize(2);
 
 	if ( s1==1 && s2==1 ) {
 		// Vector u from center 1 to center 2
@@ -345,10 +361,10 @@ void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 		//double uperp_y = -turn_radius * ux / norm_u;
 
 		// Tangent points
-		qt1[0] = q1[0] + turn_radius * uy / norm_u;
-		qt1[1] = q1[1] - turn_radius * ux / norm_u;
-		qt2[0] = q2[0] + turn_radius * uy / norm_u;
-		qt2[1] = q2[1] - turn_radius * ux / norm_u;
+		twt.qt1[0] = q1[0] + turn_radius * uy / norm_u;
+		twt.qt1[1] = q1[1] - turn_radius * ux / norm_u;
+		twt.qt2[0] = q2[0] + turn_radius * uy / norm_u;
+		twt.qt2[1] = q2[1] - turn_radius * ux / norm_u;
 	}
 	else if ( s1==-1 && s2==-1 ) {
 		// Vector u from center 1 to center 2
@@ -361,10 +377,10 @@ void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 		//double uperp_y = turn_radius * ux / norm_u;
 
 		// Tangent points
-		qt1[0] = q1[0] - turn_radius * uy / norm_u;
-		qt1[1] = q1[1] + turn_radius * ux / norm_u;
-		qt2[0] = q2[0] - turn_radius * uy / norm_u;
-		qt2[1] = q2[1] + turn_radius * ux / norm_u;
+		twt.qt1[0] = q1[0] - turn_radius * uy / norm_u;
+		twt.qt1[1] = q1[1] + turn_radius * ux / norm_u;
+		twt.qt2[0] = q2[0] - turn_radius * uy / norm_u;
+		twt.qt2[1] = q2[1] + turn_radius * ux / norm_u;
 	}
 	else if ( s1==1 && s2==-1 ) {
 		// Vector to midpoint of segment from center 1 to center 2
@@ -381,10 +397,10 @@ void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 		qmid_y /= L;
 
 		// Tangent points
-		qt1[0] = q1[0] + x * qmid_x + y * qmid_y;
-		qt1[1] = q1[1] + x * qmid_y - y * qmid_x;
-		qt2[0] = q2[0] - x * qmid_x - y * qmid_y;
-		qt2[1] = q2[1] - x * qmid_y + y * qmid_x;
+		twt.qt1[0] = q1[0] + x * qmid_x + y * qmid_y;
+		twt.qt1[1] = q1[1] + x * qmid_y - y * qmid_x;
+		twt.qt2[0] = q2[0] - x * qmid_x - y * qmid_y;
+		twt.qt2[1] = q2[1] - x * qmid_y + y * qmid_x;
 	}
 	else if ( s1==-1 && s2==1 ) {
 		// Vector to midpoint of segment from center 1 to center 2
@@ -401,40 +417,70 @@ void StateValidityChecker::twb_gettangent(Vector q1,int s1, Vector q2, int s2) {
 		qmid_y /= L;
 
 		// Tangent points
-		qt1[0] = q1[0] + x * qmid_x - y * qmid_y;
-		qt1[1] = q1[1] + x * qmid_y + y * qmid_x;
-		qt2[0] = q2[0] - x * qmid_x + y * qmid_y;
-		qt2[1] = q2[1] - x * qmid_y - y * qmid_x;
+		twt.qt1[0] = q1[0] + x * qmid_x - y * qmid_y;
+		twt.qt1[1] = q1[1] + x * qmid_y + y * qmid_x;
+		twt.qt2[0] = q2[0] - x * qmid_x + y * qmid_y;
+		twt.qt2[1] = q2[1] - x * qmid_y - y * qmid_x;
 	}
 	else {
 		printf("Error: twb_gettangent was passed s1=%d, s2=%d",s1,s2);
 		exit(1);
 	}
+
+	return twt;
 }
 
-double StateValidityChecker::twb_getangle(Vector q1, Vector q2) {
+double StateValidChecker::twb_getangle(Vector q1, Vector q2) const {
 
 	return atan2(q2[1]-q1[1],q2[0]-q1[0]);
 
 }
 
-
 // ============================== Optimization functions ===================================
 
-ob::Cost StateValidityChecker::motionCost(Matrix Q) {
+double StateValidChecker::MotionCost(Matrix Q) {
 
-	return pathLengthObjective(Q);
-
-}
-
-ob::Cost StateValidityChecker::pathLengthObjective(Matrix Q) {
-
-	ob::Cost C(0.0);
+	double C = 0;
 	for (int i = 1; i < Q.size(); i++)
-		C.value() += normDistance(Q[i-1], Q[i]);
+		C += normDistance(Q[i-1], Q[i]);
 
 	return C;
 }
+/*
+double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2) {
+
+	Vector q1(n), q2(n), q(n);
+
+	const ob::RealVectorStateSpace::StateType *Q1 = s1->as<ob::RealVectorStateSpace::StateType>();
+	// Set state of rod
+	for (unsigned i = 0; i < n; i++) {
+		q1[i] = Q1->values[i];
+	}
+	const ob::RealVectorStateSpace::StateType *Q2 = s2->as<ob::RealVectorStateSpace::StateType>();
+	// Set state of rod
+	for (unsigned i = 0; i < n; i++) {
+		q2[i] = Q2->values[i];
+	}
+
+	Matrix M = {{1,1,1},{-4,0,-4},{1,1,1}};//GetShortestPath(q1, q2);
+	v = {(int)M[0][0], (int)M[0][1], (int)M[0][2]};
+	w = M[1];
+	t = M[2];
+
+	Matrix Q;
+	Q.push_back(q1);
+
+	for (int i = 0; i < v.size(); i++) {
+		int m = 1+ceil(t[i]/dt); // dt + j*dt ?
+		double dd = t[i] / (m-1);
+		q = Q.back();
+		for (int j = 1; j < m; j++) // starts from 1 because the first point was already inserted to Q
+			Q.push_back(myprop(q, v[i], w[i], j*dd));
+	}
+
+	return MotionCost(Q);
+}*/
+
 
 
 

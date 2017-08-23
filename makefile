@@ -12,7 +12,7 @@ CXXFLAGS= -I${OMPL_DIR}/include -I${OMPL_DIR}/lib/x86_64-linux-gnu -I$(EIGEN1_DI
 LDFLAGS=  -L${OMPL_DIR}/lib -L${OMPL_DIR}/lib/x86_64-linux-gnu -lompl -lompl_app_base -lompl_app -lboost_filesystem -lboost_system -lboost_serialization -lboost_program_options -Wl,-rpath ${OMPL_DIR}/lib/x86_64-linux-gnu
 LIBS += -L/usr/lib/x86_64-linux-gnu -lboost_system
 
-CPPS = ${INC_RUN}plan.cpp ${INC_VALIDITY}collisions.cpp ${INC_VALIDITY}StateValidityChecker.cpp ${INC_VALIDITY}camera.cpp
+CPPS = ${INC_RUN}plan.cpp ${INC_VALIDITY}collisions.cpp ${INC_VALIDITY}StateValidChecker.cpp ${INC_VALIDITY}camera.cpp
 CPP_PLANNERS = ${INC_PLANNERS}myRRT.cpp ${INC_PLANNERS}myRRTstar.cpp 
 
 all:

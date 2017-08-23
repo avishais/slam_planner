@@ -16,9 +16,9 @@ CPPS = ${INC_RUN}plan.cpp ${INC_VALIDITY}collisions.cpp ${INC_VALIDITY}StateVali
 CPP_PLANNERS = ${INC_PLANNERS}myRRT.cpp ${INC_PLANNERS}myRRTstar.cpp 
 
 all:
-	#$(CXX) $(CPPS) $(CPP_PLANNERS) -o psl $(CXXFLAGS) $(LDFLAGS) -std=c++11 #-Wall
+	$(CXX) $(CPPS) $(CPP_PLANNERS) -o psl $(CXXFLAGS) $(LDFLAGS) -std=c++11 #-Wall
 	#$(CXX) ${INC_VALIDITY}collisions.cpp -o co -std=c++11 #-Wall
-	$(CXX) ${INC_RUN}test.cpp ${INC_VALIDITY}camera.cpp -o cam $(CXXFLAGS)  -std=c++11 #-Wall
+	#$(CXX) ${INC_RUN}test.cpp ${INC_VALIDITY}camera.cpp -o cam $(CXXFLAGS)  -std=c++11 #-Wall
 
 
 
