@@ -50,6 +50,20 @@ void StateValidChecker::printStateVector(const ob::State *state) {
 
 // ==========================================================================================================
 
+void StateValidChecker::setStartState(ob::State *st) {
+
+	retrieveStateVector(st, StartState);
+
+}
+
+Vector StateValidChecker::getStartState() {
+
+	return StartState;
+
+}
+
+// ==========================================================================================================
+
 bool StateValidChecker::isValid(const ob::State *state) {
 	Vector q(n);
 	retrieveStateVector(state, q);
@@ -62,7 +76,21 @@ bool StateValidChecker::isValid(Vector q) {
 	if (!check_collisions(q, robot_r))
 		return false;
 
-	return IsStateVisiblilty(q[0], q[1], q[2]);
+	/** Check all constraints (collisions and number of features) */
+	if (!heuristicValidityCheck) {
+		return IsStateVisiblilty(q[0], q[1], q[2]);
+	}
+	/** Check number of features above a threshold only for states with distance maxDistHeuristicValidity
+	 * from the start (only [x y] distance	 */
+	else {
+
+		if ( (q[0]-StartState[0])*(q[0]-StartState[0]) + (q[1]-StartState[1])*(q[1]-StartState[1]) < maxDistHeuristicValidity*maxDistHeuristicValidity )
+			return IsStateVisiblilty(q[0], q[1], q[2]);
+		else
+			return true;
+
+	}
+
 }
 
 bool StateValidChecker::checkMotion(const ob::State *s1, const ob::State *s2)

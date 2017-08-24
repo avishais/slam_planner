@@ -46,7 +46,17 @@ typedef struct {
 class StateValidChecker : public collisionDetection, public camera
 {
 public:
-	StateValidChecker(const ob::SpaceInformationPtr &si) : mysi_(si.get()), camera(MAP_FILE, UB_FILE, LB_FILE) {};
+	StateValidChecker(const ob::SpaceInformationPtr &si) :
+		mysi_(si.get()),
+		camera(MAP_FILE, UB_FILE, LB_FILE),
+		turn_radius(0.25),
+		robot_r(0.25),
+		dt(0.2),
+		heuristicValidityCheck(true),
+		maxDistHeuristicValidity(2),
+		StartState(3)
+		{};
+
 	StateValidChecker() {};
 
 	void retrieveStateVector(const ob::State *state, Vector &a);
@@ -87,6 +97,14 @@ public:
 		return n;
 	}
 
+	double get_maxDistHeuristicValidity() {
+		return maxDistHeuristicValidity;
+	}
+
+	void setStartState(ob::State *);
+	Vector getStartState();
+	Vector StartState;
+
 	double MotionCostLength(Matrix) const;
 	double MotionCostCamera(Matrix) const;
 	double MotionCost(const ob::State *, const ob::State *, const int = 1) const;
@@ -95,10 +113,16 @@ private:
 	ob::StateSpace *stateSpace_;
 	ob::SpaceInformation    *mysi_;
 
+	/** The status of the validity checker */
+	bool heuristicValidityCheck;
+
+	/** Maximum distance for heuristic validity check */
+	double maxDistHeuristicValidity;
+
 	/** Robot properties */
-	double robot_r = 0.25; // Robot radius
-	double turn_radius = 0.25;
-	double dt = 0.2; // Interval in which to interpolate the motion
+	double robot_r; // Robot radius
+	double turn_radius; // Robot minimum turn radius
+	double dt; // Interval in which to interpolate the motion
 };
 
 

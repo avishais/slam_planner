@@ -254,21 +254,6 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
     // our functor for sorting nearest neighbors
     CostIndexCompare compareFn(costs, *opt_);
 
-    // ========
-    /*goal_s->sampleGoal(rstate);
-    printStateVector(startMotions_[0]->state);
-    printStateVector(rstate);
-
-    double c = MotionCost(startMotions_[0]->state, rstate, 2);
-    cout << (1.0 / c) << " " << c << " " << MotionCost(startMotions_[0]->state, rstate)  << endl;
-
-    Matrix M;
-    reconstructMotionTW(startMotions_[0]->state, rstate, M);
-    log_path_file(M);
-    exit(1);*/
-
-    // ========
-
     while (ptc == false)
     {
         iterations_++;
@@ -576,7 +561,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             geoPath->append(mpath[i]->state);
 
         save2file(mpath);
-        //display_costs(mpath);
+        display_costs(mpath);
 
         base::PathPtr path(geoPath);
         // Add the solution path.
@@ -1104,7 +1089,7 @@ void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
 
 	Vector q(3);
 
-	double cost2go_cam = 0, cost2go_len = 0;
+	/*double cost2go_cam = 0, cost2go_len = 0;
 	for (int i = mpath.size()-1 ; i >= 0; i--) {
 		cout << " ------- " << i << endl;
 		printStateVector(mpath[i]->state);
@@ -1120,15 +1105,46 @@ void ompl::geometric::RRTstar::display_costs(vector<Motion*> mpath) {
 			cost2go_cam += (double)costC;
 		}
 
-		/*retrieveStateVector(mpath[i]->state, q);
+		retrieveStateVector(mpath[i]->state, q);
 		int nv = countVisible(q[0], q[1], q[2]);
 		double cost =  (double)nv;//(i==mpath.size()-1 || i==0) ? 0 : 1/(nv < 10 ? 1e-5 : (double)nv);
 		cout << "n_visible: " << nv << ", state cost: " << cost << ", opt_state_cost: " << opt_->stateCost(mpath[i]->state) << endl;
-		cost2go_cam += cost;*/
+		cost2go_cam += cost;
 	}
 
 	cout << "\nCost2go camera: " << cost2go_cam << endl;
-	cout << "Cost2go length: " << cost2go_len << endl << endl;
+	cout << "Cost2go length: " << cost2go_len << endl << endl;*/
+
+	Vector st = getStartState();
+	int min_vis_heuristic = 1e9, min_vis = 1e9;
+	int i_min = -1, i_min_heuristic = -1;
+	int j = 0;
+	for (int i = mpath.size()-2 ; i >= 0; i--) {
+
+		Matrix M;
+		reconstructMotionTW(mpath[i+1]->state, mpath[i]->state, M);
+
+		for (int k = 0; k < M.size(); k++) {
+			q = M[k];
+			int nv = countVisible(q[0], q[1], q[2]);
+
+			if (nv < min_vis_heuristic && (st[0]-q[0])*(st[0]-q[0]) + (st[1]-q[1])*(st[1]-q[1]) < pow(get_maxDistHeuristicValidity(), 2)) {
+				min_vis_heuristic = nv;
+				i_min_heuristic = j;
+			}
+
+			if (nv < min_vis) {
+				min_vis = nv;
+				i_min = j;
+			}
+
+			j++;
+		}
+	}
+
+	OMPL_INFORM("%s: Minimal %d visible features in node %d.", getName().c_str(), min_vis, i_min);
+	OMPL_INFORM("%s: Minimal %d visible features of states with distance %.2f from start in node %d.", getName().c_str(), min_vis_heuristic, get_maxDistHeuristicValidity(), i_min_heuristic);
+	cout << endl;
 }
 
 void ompl::geometric::RRTstar::save2file(vector<Motion*> mpath) {
