@@ -59,8 +59,8 @@ bool StateValidChecker::isValid(const ob::State *state) {
 
 bool StateValidChecker::isValid(Vector q) {
 
-	//if (!check_collisions(q, robot_r))
-		//return false;
+	if (!check_collisions(q, robot_r))
+		return false;
 
 	return IsStateVisiblilty(q[0], q[1], q[2]);
 }
@@ -472,11 +472,8 @@ double StateValidChecker::MotionCostCamera(Matrix Q) const {
 		//cout << Q[i][0] << " " << Q[i][1] << " " << Q[i][2] << endl;
 
 		int c = countVisible(Q[i][0], Q[i][1], Q[i][2]);
-		C += c < 10 ? 1./1e-4 : 1./(double)c;
-		//cout << c << " " << C << " " << 1./c << endl;
-		//cin.ignore();
+		C += c < THRES ? 1./1e-4 : 1./(double)c;
 	}
-	//cout << C << "\n ";// << 1./(double)C << endl;
 	return C;
 }
 
@@ -513,8 +510,6 @@ double StateValidChecker::MotionCost(const ob::State *s1, const ob::State *s2, c
 	case 1:
 		return MotionCostLength(Q);
 	case 2:
-		//double C = MotionCostCamera(Q);
-		//cout << "C: " << C << endl;
 		return MotionCostCamera(Q);
 	}
 }

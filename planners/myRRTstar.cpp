@@ -60,7 +60,7 @@ ompl::geometric::RRTstar::RRTstar(const base::SpaceInformationPtr &si) :
     r_rrg_(0.0),
     delayCC_(true),
     lastGoalMotion_(nullptr),
-    useTreePruning_(true),
+    useTreePruning_(false),
     pruneThreshold_(0.05),
     usePrunedMeasure_(false),
     useInformedSampling_(false),
@@ -481,24 +481,13 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             double distanceFromGoal;
             if (goal->isSatisfied(motion->state, &distanceFromGoal))
             {
-            	cout << " <===== "; printStateVector(motion->state);
                 goalMotions_.push_back(motion);
                 checkForSolution = true;
-            }
-
-            if (goalMotions_.size() > 0) {
-            	cout << "===============================\n";
-            	for (int ijk = 0; ijk < goalMotions_.size(); ijk++)
-            		printStateVector(goalMotions_[ijk]->state);
             }
 
             // Checking for solution or iterative improvement
             if (checkForSolution)
             {
-            	//printStateVector(motion->state);
-            	//cout << "cost goal: " << motion->cost << endl;
-            	//cout << "dist goal: " << distanceFromGoal << endl;
-
                 bool updatedSolution = false;
                 for (size_t i = 0; i < goalMotions_.size(); ++i)
                 {
@@ -587,7 +576,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTstar::solve(const base::PlannerTer
             geoPath->append(mpath[i]->state);
 
         save2file(mpath);
-        display_costs(mpath);
+        //display_costs(mpath);
 
         base::PathPtr path(geoPath);
         // Add the solution path.

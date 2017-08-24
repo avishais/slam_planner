@@ -17,7 +17,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#define THRES 4
+#define THRES 10
 
 using namespace std;
 

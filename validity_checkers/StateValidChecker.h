@@ -97,7 +97,7 @@ private:
 
 	/** Robot properties */
 	double robot_r = 0.25; // Robot radius
-	double turn_radius = 0.1;
+	double turn_radius = 0.25;
 	double dt = 0.2; // Interval in which to interpolate the motion
 };
 
